@@ -1,18 +1,31 @@
-import { AuthProvider } from '@/contexts/AuthContext';
+import { useAppDispatch } from '@/store/hooks';
+import { hydrateAuth } from '@/store/slices/authSlice';
+import { store } from '@/store/index';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
+import { Provider } from 'react-redux';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+
+function AuthHydrate() {
+  const dispatch = useAppDispatch();
+  useEffect(() => {
+    dispatch(hydrateAuth());
+  }, [dispatch]);
+  return null;
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
+      <Provider store={store}>
+        <AuthHydrate />
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
@@ -24,7 +37,7 @@ export default function RootLayout() {
           </Stack>
           <StatusBar style="auto" />
         </ThemeProvider>
-      </AuthProvider>
+      </Provider>
     </GestureHandlerRootView>
   );
 }

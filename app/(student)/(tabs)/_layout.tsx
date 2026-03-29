@@ -23,7 +23,7 @@ export default function StudentTabsLayout() {
         headerRight: () => (
           <Pressable
             onPress={() => {
-              // Navigate to notifications
+              /* notifications placeholder */
             }}
             style={{ paddingRight: 16 }}
           >
@@ -53,18 +53,27 @@ export default function StudentTabsLayout() {
       <Tabs.Screen
         name="study"
         options={{
-          title: "Study",
+          title: "Syllabus",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="book-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="live"
+        name="tasks"
         options={{
-          title: "Live",
+          title: "Tasks",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="videocam-outline" size={size} color={color} />
+            <Ionicons name="checkbox-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="activities"
+        options={{
+          title: "Activities",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calendar-outline" size={size} color={color} />
           ),
         }}
       />
@@ -81,9 +90,7 @@ export default function StudentTabsLayout() {
         name="settings"
         options={{
           title: "Settings",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings-outline" size={size} color={color} />
-          ),
+          href: null,
         }}
       />
     </Tabs>

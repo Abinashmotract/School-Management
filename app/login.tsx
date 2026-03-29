@@ -1,9 +1,18 @@
 import type { AppRole } from "@/constants/school-theme";
 import { RoleColors } from "@/constants/school-theme";
-import { useAuth } from "@/contexts/AuthContext";
+import { getLoginEndpoint } from "@/lib/auth-api";
+import { useAppDispatch } from "@/store/hooks";
+import {
+  clearLoginError,
+  enterDemoRole,
+  loginStudent,
+} from "@/store/slices/authSlice";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -24,12 +33,58 @@ const roles: {
   { id: "teacher", label: "Teacher", icon: "easel-outline" },
 ];
 
+const rolePaths: Record<AppRole, string> = {
+  student: "/(student)/(tabs)",
+  parent: "/(parent)/(tabs)",
+  teacher: "/(teacher)/(tabs)",
+};
+
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const { login } = useAuth();
-  const [email, setEmail] = useState("");
+  const dispatch = useAppDispatch();
+
+  const [studentId, setStudentId] = useState("");
   const [password, setPassword] = useState("");
   const [selectedRole, setSelectedRole] = useState<AppRole>("student");
+  const [busy, setBusy] = useState(false);
+
+  const onSignIn = async () => {
+    dispatch(clearLoginError());
+
+    if (selectedRole === "student") {
+      if (!studentId.trim() || !password) {
+        Alert.alert("Sign in", "Enter Student ID and password.");
+        return;
+      }
+      setBusy(true);
+      const action = await dispatch(
+        loginStudent({
+          studentId: studentId.trim(),
+          password,
+        })
+      );
+      setBusy(false);
+      if (loginStudent.fulfilled.match(action)) {
+        router.replace("/(student)/(tabs)" as never);
+      } else if (loginStudent.rejected.match(action)) {
+        const msg =
+          typeof action.payload === "string"
+            ? action.payload
+            : "Sign in failed.";
+        Alert.alert("Sign in failed", msg);
+      }
+      return;
+    }
+
+    dispatch(enterDemoRole(selectedRole));
+    router.replace(rolePaths[selectedRole] as never);
+  };
+
+  const idLabel = selectedRole === "student" ? "Student ID" : "Email";
+  const idPlaceholder =
+    selectedRole === "student" ? "e.g. TENANT-ABC-010120" : "hello@example.com";
+  const idKeyboard =
+    selectedRole === "student" ? "default" : "email-address";
 
   return (
     <KeyboardAvoidingView
@@ -52,7 +107,10 @@ export default function LoginScreen() {
               return (
                 <Pressable
                   key={r.id}
-                  onPress={() => setSelectedRole(r.id)}
+                  onPress={() => {
+                    dispatch(clearLoginError());
+                    setSelectedRole(r.id);
+                  }}
                   style={[
                     styles.roleChip,
                     active && {
@@ -79,15 +137,16 @@ export default function LoginScreen() {
             })}
           </View>
 
-          <Text style={styles.label}>Email</Text>
+          <Text style={styles.label}>{idLabel}</Text>
           <TextInput
             style={styles.input}
-            placeholder="hello@example.com"
+            placeholder={idPlaceholder}
             placeholderTextColor="#999"
-            keyboardType="email-address"
+            keyboardType={idKeyboard}
             autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
+            autoCorrect={false}
+            value={studentId}
+            onChangeText={setStudentId}
           />
 
           <Text style={styles.label}>Password</Text>
@@ -105,16 +164,23 @@ export default function LoginScreen() {
           </Pressable>
 
           <Pressable
-            style={styles.primaryBtn}
-            onPress={() => login(selectedRole)}
+            style={[styles.primaryBtn, busy && styles.primaryBtnDisabled]}
+            onPress={() => void onSignIn()}
+            disabled={busy}
           >
-            <Text style={styles.primaryBtnText}>Sign in →</Text>
+            {busy ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.primaryBtnText}>Sign in →</Text>
+            )}
           </Pressable>
 
           <View style={styles.demo}>
             <Ionicons name="shield-checkmark-outline" size={14} color="#666" />
             <Text style={styles.demoText}>
-              Demo: any email/password · role controls the app
+              {selectedRole === "student"
+                ? `Students: Student ID + admission password. API: ${getLoginEndpoint()}`
+                : "Demo: any email/password · role controls the app"}
             </Text>
           </View>
         </View>
@@ -206,7 +272,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 12,
+    minHeight: 52,
+    justifyContent: "center",
+  },
+  primaryBtnDisabled: {
+    opacity: 0.7,
   },
   primaryBtnText: {
     color: "#fff",

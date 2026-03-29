@@ -1,10 +1,11 @@
 import type { AppRole } from "@/constants/school-theme";
 import { RoleColors } from "@/constants/school-theme";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAppDispatch } from "@/store/hooks";
+import { logout } from "@/store/slices/authSlice";
 import { Ionicons } from "@expo/vector-icons";
 import type { DrawerContentComponentProps } from "@react-navigation/drawer";
 import { DrawerContentScrollView } from "@react-navigation/drawer";
-import { useRouter } from "expo-router";
+import { router, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -109,8 +110,8 @@ export function RoleDrawerContent({
   role,
   ...props
 }: DrawerContentComponentProps & { role: AppRole }) {
-  const router = useRouter();
-  const { logout } = useAuth();
+  const navRouter = useRouter();
+  const dispatch = useAppDispatch();
   const c = RoleColors[role];
   const items = menus[role];
 
@@ -133,7 +134,7 @@ export function RoleDrawerContent({
           style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
           onPress={() => {
             props.navigation.closeDrawer();
-            router.push(item.href as never);
+            navRouter.push(item.href as never);
           }}
         >
           <Ionicons
@@ -151,7 +152,9 @@ export function RoleDrawerContent({
           style={({ pressed }) => [styles.logout, pressed && styles.rowPressed]}
           onPress={() => {
             props.navigation.closeDrawer();
-            logout();
+            void dispatch(logout()).then(() => {
+              router.replace("/login");
+            });
           }}
         >
           <Ionicons name="log-out-outline" size={22} color="#EF4444" />

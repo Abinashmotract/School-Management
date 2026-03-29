@@ -1,31 +1,43 @@
 import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { useAppSelector } from '@/store/hooks';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const primary = RoleColors.student.primary;
 
+function str(v: unknown): string {
+  if (v == null) return '—';
+  return String(v);
+}
+
 export default function StudentProfileScreen() {
+  const user = useAppSelector((s) => s.auth.user);
+  const first = str(user?.firstName);
+  const last = str(user?.lastName);
+  const displayName =
+    first !== '—' || last !== '—'
+      ? `${first !== '—' ? first : ''} ${last !== '—' ? last : ''}`.trim()
+      : 'Student';
+  const initial = (first !== '—' ? first : 'S').charAt(0).toUpperCase();
+
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <View style={[styles.avatar, { backgroundColor: `${primary}18` }]}>
-          <Text style={[styles.avatarText, { color: primary }]}>A</Text>
+          <Text style={[styles.avatarText, { color: primary }]}>{initial}</Text>
         </View>
-        <Text style={styles.name}>Ankit Sharma</Text>
-        <Text style={styles.email}>ankit.sharma@school.com</Text>
+        <Text style={styles.name}>{displayName || 'Student'}</Text>
+        <Text style={styles.email}>{str(user?.email)}</Text>
         <View style={[styles.badge, { backgroundColor: `${primary}18` }]}>
-          <Text style={[styles.badgeText, { color: primary }]}>Student · Class 10</Text>
+          <Text style={[styles.badgeText, { color: primary }]}>
+            Student · {str(user?.studentId ?? user?.username)}
+          </Text>
         </View>
       </View>
 
-      <Text style={styles.section}>Academic</Text>
-      <InfoRow label="Class" value="10th Grade" />
-      <InfoRow label="Section" value="A" />
-      <InfoRow label="Roll No." value="24" />
-
-      <Text style={styles.section}>School</Text>
-      <InfoRow label="School" value="Delhi Public School" />
-      <InfoRow label="Board" value="CBSE" />
+      <Text style={styles.section}>Account</Text>
+      <InfoRow label="Admission No." value={str(user?.admissionNumber)} />
+      <InfoRow label="Student ID" value={str(user?.studentId ?? user?.username)} />
     </ScrollView>
   );
 }

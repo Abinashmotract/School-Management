@@ -3,14 +3,14 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 
 type Props = {
-  title: string;
+  title?: string;
   paragraphs: string[];
 };
 
 export function LegalPage({ title, paragraphs }: Props) {
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>{title}</Text>
+      {title ? <Text style={styles.title}>{title}</Text> : null}
       {paragraphs.map((p, i) => (
         <Text key={i} style={styles.p}>
           {p}

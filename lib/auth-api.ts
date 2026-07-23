@@ -89,3 +89,87 @@ export async function loginWithCredentials(
     },
   };
 }
+
+export async function refreshAccessToken(
+  refreshToken: string
+): Promise<{ ok: true; data: LoginSuccess } | { ok: false; message: string }> {
+  const url = `${API_BASE_URL.replace(/\/$/, "")}/admin/login/refresh-token`;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${refreshToken}`,
+      },
+    });
+    const rawText = await res.text();
+    let json: unknown = null;
+    if (rawText) {
+      try {
+        json = JSON.parse(rawText) as unknown;
+      } catch {
+        /* not JSON */
+      }
+    }
+    if (!res.ok) {
+      return { ok: false, message: parseErrorMessage(res.status, json, rawText) };
+    }
+    const data = json as Partial<LoginSuccess> | null;
+    if (!data?.accessToken || !data?.refreshToken) {
+      return { ok: false, message: "Invalid refresh response." };
+    }
+    return {
+      ok: true,
+      data: {
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        user: (data.user || {}) as Record<string, unknown>,
+      },
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      message: e instanceof Error ? e.message : "Could not refresh session.",
+    };
+  }
+}
+
+export async function sendForgotPasswordOtp(username: string) {
+  const url = `${API_BASE_URL.replace(/\/$/, "")}/admin/forgot-password/send-otp`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: username.trim() }),
+  });
+  const json = (await res.json().catch(() => ({}))) as { message?: string };
+  if (!res.ok) throw new Error(json.message || "Could not send OTP.");
+  return json;
+}
+
+export async function verifyForgotPasswordOtp(username: string, otp: string) {
+  const url = `${API_BASE_URL.replace(/\/$/, "")}/admin/forgot-password/verify-otp`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: username.trim(), otp: otp.trim() }),
+  });
+  const json = (await res.json().catch(() => ({}))) as {
+    message?: string;
+    validator?: string;
+  };
+  if (!res.ok) throw new Error(json.message || "Invalid OTP.");
+  if (!json.validator) throw new Error("Missing reset token.");
+  return json.validator;
+}
+
+export async function resetForgotPassword(validator: string, password: string) {
+  const url = `${API_BASE_URL.replace(/\/$/, "")}/admin/forgot-password/reset`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ validator, password }),
+  });
+  const json = (await res.json().catch(() => ({}))) as { message?: string };
+  if (!res.ok) throw new Error(json.message || "Could not reset password.");
+  return json;
+}

@@ -19,7 +19,7 @@ type AuthState = {
   isHydrated: boolean;
   accessToken: string | null;
   user: AuthUser | null;
-  isStudentSession: boolean;
+  isApiSession: boolean;
   loginError: string | null;
 };
 
@@ -28,7 +28,7 @@ const initialState: AuthState = {
   isHydrated: false,
   accessToken: null,
   user: null,
-  isStudentSession: false,
+  isApiSession: false,
   loginError: null,
 };
 
@@ -38,14 +38,20 @@ export const hydrateAuth = createAsyncThunk('auth/hydrate', async () => {
     SecureStore.getItemAsync(SK_ACCESS),
     SecureStore.getItemAsync(SK_USER),
   ]);
-  if (storedRole === 'student' && token && userJson) {
+  if (
+    (storedRole === 'student' ||
+      storedRole === 'teacher' ||
+      storedRole === 'parent') &&
+    token &&
+    userJson
+  ) {
     try {
       const user = JSON.parse(userJson) as AuthUser;
       return {
-        role: 'student' as const,
+        role: storedRole as AppRole,
         accessToken: token,
         user,
-        isStudentSession: true,
+        isApiSession: true,
       };
     } catch {
       return null;
@@ -78,7 +84,88 @@ export const loginStudent = createAsyncThunk(
       return {
         accessToken: result.data.accessToken,
         user: result.data.user,
-        isStudentSession: true,
+        isApiSession: true,
+      };
+    } catch (e) {
+      return rejectWithValue(
+        e instanceof Error ? e.message : 'Could not complete sign in.'
+      );
+    }
+  }
+);
+
+export const loginTeacher = createAsyncThunk(
+  'auth/loginTeacher',
+  async (
+    { username, password }: { username: string; password: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const result = await loginWithCredentials(username, password);
+      if (!result.ok) {
+        return rejectWithValue(result.message);
+      }
+
+      const user = result.data.user;
+      const roleFromApi = String(user?.role || '').toUpperCase();
+      const isTeachingStaff =
+        user?.isTeachingStaff === true ||
+        String(user?.staffCategory || '').toLowerCase() === 'teaching';
+
+      if (roleFromApi !== 'TEACHER' && !isTeachingStaff) {
+        return rejectWithValue(
+          'This account is not a teacher account. Use your staff username/email and password.'
+        );
+      }
+
+      await SecureStore.setItemAsync(SK_ACCESS, result.data.accessToken);
+      await SecureStore.setItemAsync(SK_REFRESH, result.data.refreshToken);
+      await SecureStore.setItemAsync(SK_ROLE, 'teacher');
+      await SecureStore.setItemAsync(SK_USER, JSON.stringify(user));
+
+      return {
+        accessToken: result.data.accessToken,
+        user,
+        isApiSession: true,
+      };
+    } catch (e) {
+      return rejectWithValue(
+        e instanceof Error ? e.message : 'Could not complete sign in.'
+      );
+    }
+  }
+);
+
+export const loginParent = createAsyncThunk(
+  'auth/loginParent',
+  async (
+    { username, password }: { username: string; password: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const result = await loginWithCredentials(username, password);
+      if (!result.ok) {
+        return rejectWithValue(result.message);
+      }
+
+      const user = result.data.user;
+      const roleFromApi = String(user?.role || '').toUpperCase();
+
+      if (roleFromApi !== 'PARENT') {
+        return rejectWithValue(
+          'This account is not a parent account. Use your parent username/email and password.'
+        );
+      }
+
+      await SecureStore.setItemAsync(SK_ACCESS, result.data.accessToken);
+      await SecureStore.setItemAsync(SK_REFRESH, result.data.refreshToken);
+      await SecureStore.setItemAsync(SK_ROLE, 'parent');
+      await SecureStore.setItemAsync(SK_USER, JSON.stringify(user));
+
+      return {
+        accessToken: result.data.accessToken,
+        user,
+        isApiSession: true,
       };
     } catch (e) {
       return rejectWithValue(
@@ -94,6 +181,7 @@ export const logout = createAsyncThunk('auth/logout', async () => {
     SecureStore.deleteItemAsync(SK_REFRESH).catch(() => {}),
     SecureStore.deleteItemAsync(SK_ROLE).catch(() => {}),
     SecureStore.deleteItemAsync(SK_USER).catch(() => {}),
+    SecureStore.deleteItemAsync('parent_selected_student_id').catch(() => {}),
   ]);
 });
 
@@ -107,12 +195,19 @@ const authSlice = createSlice({
     enterDemoRole(state, action: PayloadAction<AppRole>) {
       state.role = action.payload;
       state.loginError = null;
-      state.isStudentSession = false;
+      state.isApiSession = false;
       state.accessToken = null;
       state.user = null;
     },
     resetAuth() {
       return { ...initialState, isHydrated: true };
+    },
+    sessionRefreshed(
+      state,
+      action: PayloadAction<{ accessToken: string; user?: AuthUser }>
+    ) {
+      state.accessToken = action.payload.accessToken;
+      if (action.payload.user) state.user = action.payload.user;
     },
   },
   extraReducers: (builder) => {
@@ -126,7 +221,7 @@ const authSlice = createSlice({
           state.role = action.payload.role;
           state.accessToken = action.payload.accessToken;
           state.user = action.payload.user;
-          state.isStudentSession = action.payload.isStudentSession;
+          state.isApiSession = action.payload.isApiSession;
         }
       })
       .addCase(hydrateAuth.rejected, (state) => {
@@ -139,10 +234,44 @@ const authSlice = createSlice({
         state.role = 'student';
         state.accessToken = action.payload.accessToken;
         state.user = action.payload.user;
-        state.isStudentSession = true;
+        state.isApiSession = true;
         state.loginError = null;
       })
       .addCase(loginStudent.rejected, (state, action) => {
+        const msg =
+          typeof action.payload === 'string'
+            ? action.payload
+            : action.error.message || 'Sign in failed';
+        state.loginError = msg;
+      })
+      .addCase(loginTeacher.pending, (state) => {
+        state.loginError = null;
+      })
+      .addCase(loginTeacher.fulfilled, (state, action) => {
+        state.role = 'teacher';
+        state.accessToken = action.payload.accessToken;
+        state.user = action.payload.user;
+        state.isApiSession = true;
+        state.loginError = null;
+      })
+      .addCase(loginTeacher.rejected, (state, action) => {
+        const msg =
+          typeof action.payload === 'string'
+            ? action.payload
+            : action.error.message || 'Sign in failed';
+        state.loginError = msg;
+      })
+      .addCase(loginParent.pending, (state) => {
+        state.loginError = null;
+      })
+      .addCase(loginParent.fulfilled, (state, action) => {
+        state.role = 'parent';
+        state.accessToken = action.payload.accessToken;
+        state.user = action.payload.user;
+        state.isApiSession = true;
+        state.loginError = null;
+      })
+      .addCase(loginParent.rejected, (state, action) => {
         const msg =
           typeof action.payload === 'string'
             ? action.payload
@@ -153,11 +282,12 @@ const authSlice = createSlice({
         state.role = null;
         state.accessToken = null;
         state.user = null;
-        state.isStudentSession = false;
+        state.isApiSession = false;
         state.loginError = null;
       });
   },
 });
 
-export const { clearLoginError, enterDemoRole, resetAuth } = authSlice.actions;
+export const { clearLoginError, enterDemoRole, resetAuth, sessionRefreshed } =
+  authSlice.actions;
 export const authReducer = authSlice.reducer;

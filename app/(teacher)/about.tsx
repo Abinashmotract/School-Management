@@ -1,4 +1,4 @@
-import { DrawerSubHeader } from '@/components/navigation/DrawerSubHeader';
+import { ScreenShell } from '@/components/navigation/ScreenShell';
 import { Neutrals, RoleColors } from '@/constants/school-theme';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
@@ -8,8 +8,7 @@ const primary = RoleColors.teacher.primary;
 
 export default function TeacherAboutScreen() {
   return (
-    <View style={styles.root}>
-      <DrawerSubHeader title="About Us" />
+    <ScreenShell role="teacher" title="About Us" showBack showMenu>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <View style={[styles.hero, { backgroundColor: primary }]}>
           <Ionicons name="school" size={48} color="#fff" />
@@ -22,12 +21,11 @@ export default function TeacherAboutScreen() {
           SchoolApp helps teachers focus on teaching with streamlined assignments and communication.
         </Text>
       </ScrollView>
-    </View>
+    </ScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Neutrals.bg },
   scroll: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
   hero: {

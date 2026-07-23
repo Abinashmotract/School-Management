@@ -1,5 +1,10 @@
 import { Neutrals, RoleColors } from '@/constants/school-theme';
-import { fetchSyllabus, type SyllabusRow } from '@/lib/student-portal-api';
+import {
+  fetchLessonPlans,
+  fetchStudentProfile,
+  toPortalOverview,
+  type LessonPlanRow,
+} from '@/lib/student-portal-api';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -19,13 +24,19 @@ export default function StudentStudyScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [rows, setRows] = useState<SyllabusRow[]>([]);
+  const [rows, setRows] = useState<LessonPlanRow[]>([]);
+  const [subtitle, setSubtitle] = useState('Lesson plans and resources for your class');
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const data = await fetchSyllabus();
+      const profile = await fetchStudentProfile();
+      const data = await fetchLessonPlans(profile);
+      const overview = toPortalOverview(profile);
       setRows(data);
+      setSubtitle(
+        `${overview.className}${overview.sectionName ? ` · ${overview.sectionName}` : ''} · ${overview.session}`,
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load syllabus.');
     } finally {
@@ -39,7 +50,7 @@ export default function StudentStudyScreen() {
   }, [load]);
 
   const bySubject = useMemo(() => {
-    const m = new Map<string, SyllabusRow[]>();
+    const m = new Map<string, LessonPlanRow[]>();
     for (const r of rows) {
       const k = r.subjectName || 'General';
       if (!m.has(k)) m.set(k, []);
@@ -64,31 +75,36 @@ export default function StudentStudyScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />
       }
     >
-      <Text style={styles.title}>Syllabus</Text>
-      <Text style={styles.sub}>Topics and resources for your class</Text>
+      <Text style={styles.title}>Syllabus & Lesson Plan</Text>
+      <Text style={styles.sub}>{subtitle}</Text>
 
       {error ? <Text style={styles.err}>{error}</Text> : null}
 
       {rows.length === 0 && !error ? (
-        <Text style={styles.empty}>No syllabus items yet. Your school will publish them here.</Text>
+        <Text style={styles.empty}>No lesson plans yet. Your school will publish them here.</Text>
       ) : null}
 
       {[...bySubject.entries()].map(([subject, items]) => (
         <View key={subject} style={styles.group}>
           <Text style={styles.groupTitle}>{subject}</Text>
           {items.map((item) => (
-            <View key={item._id} style={styles.card}>
+            <View key={item.planId || item._id || item.topicName} style={styles.card}>
               <Ionicons name="document-text-outline" size={22} color={primary} />
               <View style={styles.cardText}>
-                <Text style={styles.cardTitle}>{item.title}</Text>
-                {item.description ? (
+                <Text style={styles.cardTitle}>{item.topicName || 'Lesson'}</Text>
+                {item.keyContent ? (
                   <Text style={styles.cardDesc} numberOfLines={4}>
-                    {item.description}
+                    {item.keyContent}
                   </Text>
                 ) : null}
-                {item.resourceUrl ? (
+                {item.learningObjectives?.length ? (
+                  <Text style={styles.cardDesc} numberOfLines={3}>
+                    Objectives: {item.learningObjectives.join(', ')}
+                  </Text>
+                ) : null}
+                {item.resources?.[0] ? (
                   <Pressable
-                    onPress={() => Linking.openURL(item.resourceUrl!)}
+                    onPress={() => Linking.openURL(item.resources![0])}
                     style={styles.linkRow}
                   >
                     <Text style={styles.link}>Open resource</Text>

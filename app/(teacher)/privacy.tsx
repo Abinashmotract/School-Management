@@ -1,19 +1,17 @@
-import { DrawerSubHeader } from '@/components/navigation/DrawerSubHeader';
+import { ScreenShell } from '@/components/navigation/ScreenShell';
 import { LegalPage } from '@/components/screens/shared/LegalPage';
 import React from 'react';
-import { View } from 'react-native';
 
 export default function TeacherPrivacyScreen() {
   return (
-    <View style={{ flex: 1 }}>
-      <DrawerSubHeader title="Privacy Policy" />
+    <ScreenShell role="teacher" title="Privacy Policy" showBack showMenu>
       <LegalPage
-        title="Your privacy"
         paragraphs={[
-          'Access to student information is limited to what your role requires for teaching.',
-          'Audit logs may be kept for security; contact your administrator for questions.',
+          'We collect staff profile and activity data required for school operations.',
+          'Student information is accessible only for assigned classes and duties.',
+          'Contact your school administrator for privacy-related requests.',
         ]}
       />
-    </View>
+    </ScreenShell>
   );
 }

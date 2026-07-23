@@ -1,19 +1,17 @@
-import { DrawerSubHeader } from '@/components/navigation/DrawerSubHeader';
+import { ScreenShell } from '@/components/navigation/ScreenShell';
 import { LegalPage } from '@/components/screens/shared/LegalPage';
 import React from 'react';
-import { View } from 'react-native';
 
 export default function ParentTermsScreen() {
   return (
-    <View style={{ flex: 1 }}>
-      <DrawerSubHeader title="Terms & Conditions" />
+    <ScreenShell role="parent" title="Terms & Conditions" showBack showMenu>
       <LegalPage
-        title="Terms of use"
         paragraphs={[
-          'Parent accounts are issued in connection with a student enrolled at a partner school.',
-          'You agree to use messaging and data features responsibly and in line with school policies.',
+          'By using SchoolApp you agree to follow school policies and acceptable use rules.',
+          'Parent accounts are linked to enrolled students and must be used responsibly.',
+          'Official school records take precedence over in-app summaries.',
         ]}
       />
-    </View>
+    </ScreenShell>
   );
 }

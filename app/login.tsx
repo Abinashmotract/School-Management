@@ -4,8 +4,9 @@ import { getLoginEndpoint } from "@/lib/auth-api";
 import { useAppDispatch } from "@/store/hooks";
 import {
   clearLoginError,
-  enterDemoRole,
+  loginParent,
   loginStudent,
+  loginTeacher,
 } from "@/store/slices/authSlice";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -51,12 +52,20 @@ export default function LoginScreen() {
   const onSignIn = async () => {
     dispatch(clearLoginError());
 
+    if (!studentId.trim() || !password) {
+      const who =
+        selectedRole === "student"
+          ? "Student ID and password"
+          : selectedRole === "parent"
+            ? "parent username/email and password"
+            : "staff username/email and password";
+      Alert.alert("Sign in", `Enter ${who}.`);
+      return;
+    }
+
+    setBusy(true);
+
     if (selectedRole === "student") {
-      if (!studentId.trim() || !password) {
-        Alert.alert("Sign in", "Enter Student ID and password.");
-        return;
-      }
-      setBusy(true);
       const action = await dispatch(
         loginStudent({
           studentId: studentId.trim(),
@@ -65,7 +74,7 @@ export default function LoginScreen() {
       );
       setBusy(false);
       if (loginStudent.fulfilled.match(action)) {
-        router.replace("/(student)/(tabs)" as never);
+        router.replace(rolePaths.student as never);
       } else if (loginStudent.rejected.match(action)) {
         const msg =
           typeof action.payload === "string"
@@ -76,15 +85,64 @@ export default function LoginScreen() {
       return;
     }
 
-    dispatch(enterDemoRole(selectedRole));
-    router.replace(rolePaths[selectedRole] as never);
+    if (selectedRole === "parent") {
+      const action = await dispatch(
+        loginParent({
+          username: studentId.trim(),
+          password,
+        })
+      );
+      setBusy(false);
+      if (loginParent.fulfilled.match(action)) {
+        router.replace(rolePaths.parent as never);
+      } else if (loginParent.rejected.match(action)) {
+        const msg =
+          typeof action.payload === "string"
+            ? action.payload
+            : "Sign in failed.";
+        Alert.alert("Sign in failed", msg);
+      }
+      return;
+    }
+
+    const action = await dispatch(
+      loginTeacher({
+        username: studentId.trim(),
+        password,
+      })
+    );
+    setBusy(false);
+
+    if (loginTeacher.fulfilled.match(action)) {
+      router.replace(rolePaths.teacher as never);
+    } else if (loginTeacher.rejected.match(action)) {
+      const msg =
+        typeof action.payload === "string" ? action.payload : "Sign in failed.";
+      Alert.alert("Sign in failed", msg);
+    }
   };
 
-  const idLabel = selectedRole === "student" ? "Student ID" : "Email";
+  const idLabel =
+    selectedRole === "student"
+      ? "Student ID"
+      : selectedRole === "parent"
+        ? "Parent username / email"
+        : "Staff username / email";
   const idPlaceholder =
-    selectedRole === "student" ? "e.g. TENANT-ABC-010120" : "hello@example.com";
+    selectedRole === "student"
+      ? "e.g. TENANT-ABC-010120"
+      : selectedRole === "parent"
+        ? "parent@school.com"
+        : "teacher@school.com";
   const idKeyboard =
     selectedRole === "student" ? "default" : "email-address";
+
+  const demoHint =
+    selectedRole === "student"
+      ? `Students: Student ID + admission password. API: ${getLoginEndpoint()}`
+      : selectedRole === "parent"
+        ? `Parents: username/email + password (role PARENT). API: ${getLoginEndpoint()}`
+        : `Teachers: staff username/email + password. API: ${getLoginEndpoint()}`;
 
   return (
     <KeyboardAvoidingView
@@ -159,7 +217,7 @@ export default function LoginScreen() {
             onChangeText={setPassword}
           />
 
-          <Pressable style={styles.forgot}>
+          <Pressable style={styles.forgot} onPress={() => router.push("/forgot-password" as never)}>
             <Text style={styles.forgotText}>Forgot password?</Text>
           </Pressable>
 
@@ -177,11 +235,7 @@ export default function LoginScreen() {
 
           <View style={styles.demo}>
             <Ionicons name="shield-checkmark-outline" size={14} color="#666" />
-            <Text style={styles.demoText}>
-              {selectedRole === "student"
-                ? `Students: Student ID + admission password. API: ${getLoginEndpoint()}`
-                : "Demo: any email/password · role controls the app"}
-            </Text>
+            <Text style={styles.demoText}>{demoHint}</Text>
           </View>
         </View>
       </View>

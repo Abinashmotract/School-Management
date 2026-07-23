@@ -1,10 +1,9 @@
 import { HapticTab } from "@/components/haptic-tab";
+import { portalTabScreenOptions } from "@/components/navigation/portalTabOptions";
 import { RoleColors } from "@/constants/school-theme";
 import { Ionicons } from "@expo/vector-icons";
-import { DrawerToggleButton } from "@react-navigation/drawer";
 import { Tabs } from "expo-router";
 import React from "react";
-import { Platform, Pressable } from "react-native";
 
 const tint = RoleColors.student.tabActive;
 
@@ -12,26 +11,7 @@ export default function StudentTabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: true,
-        headerLeft: () => (
-          <DrawerToggleButton
-            tintColor="#1E293B"
-            pressColor={Platform.OS === "android" ? `${tint}22` : undefined}
-          />
-        ),
-        headerTitle: "SchoolApp",
-        headerRight: () => (
-          <Pressable
-            onPress={() => {
-              /* notifications placeholder */
-            }}
-            style={{ paddingRight: 16 }}
-          >
-            <Ionicons name="notifications-outline" size={24} color="#1E293B" />
-          </Pressable>
-        ),
-        headerShadowVisible: false,
-        headerStyle: { backgroundColor: "#fff" },
+        ...portalTabScreenOptions("student"),
         tabBarActiveTintColor: tint,
         tabBarInactiveTintColor: "#94A3B8",
         tabBarStyle: {
@@ -60,21 +40,57 @@ export default function StudentTabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="homework"
+        options={{
+          title: "Homework",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="create-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="tasks"
         options={{
-          title: "Tasks",
+          title: "Fees",
+          href: null,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="checkbox-outline" size={size} color={color} />
+            <Ionicons name="cash-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="activities"
         options={{
-          title: "Activities",
+          title: "Timetable",
+          href: null,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="time-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: "Chat",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubbles-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="attendance"
+        options={{
+          title: "Attendance",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar-outline" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="teachers"
+        options={{
+          title: "Teachers",
+          href: null,
         }}
       />
       <Tabs.Screen
@@ -84,13 +100,6 @@ export default function StudentTabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: "Settings",
-          href: null,
         }}
       />
     </Tabs>

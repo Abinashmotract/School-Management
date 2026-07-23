@@ -18,13 +18,73 @@ type DrawerItem = {
 const menus: Record<AppRole, DrawerItem[]> = {
   student: [
     {
+      label: "Home",
+      href: "/(student)/(tabs)",
+      icon: "home-outline",
+    },
+    {
+      label: "Syllabus",
+      href: "/(student)/(tabs)/study",
+      icon: "book-outline",
+    },
+    {
+      label: "Attendance",
+      href: "/(student)/(tabs)/attendance",
+      icon: "calendar-outline",
+    },
+    {
+      label: "Timetable",
+      href: "/(student)/(tabs)/activities",
+      icon: "time-outline",
+    },
+    {
+      label: "Teachers",
+      href: "/(student)/(tabs)/teachers",
+      icon: "people-outline",
+    },
+    {
+      label: "Homework",
+      href: "/(student)/(tabs)/homework",
+      icon: "create-outline",
+    },
+    {
+      label: "Results",
+      href: "/(student)/results",
+      icon: "ribbon-outline",
+    },
+    {
+      label: "Notices",
+      href: "/(student)/notices",
+      icon: "megaphone-outline",
+    },
+    {
+      label: "Events",
+      href: "/(student)/events",
+      icon: "calendar-outline",
+    },
+    {
+      label: "Chat",
+      href: "/(student)/(tabs)/chat",
+      icon: "chatbubbles-outline",
+    },
+    {
+      label: "Notifications",
+      href: "/(student)/notifications",
+      icon: "notifications-outline",
+    },
+    {
+      label: "Fees",
+      href: "/(student)/(tabs)/tasks",
+      icon: "cash-outline",
+    },
+    {
       label: "Profile",
       href: "/(student)/(tabs)/profile",
       icon: "person-outline",
     },
     {
       label: "Settings",
-      href: "/(student)/(tabs)/settings",
+      href: "/(student)/settings",
       icon: "settings-outline",
     },
     { label: "My Access", href: "/(student)/access", icon: "key-outline" },
@@ -45,6 +105,26 @@ const menus: Record<AppRole, DrawerItem[]> = {
     },
   ],
   parent: [
+    {
+      label: "Home",
+      href: "/(parent)/(tabs)",
+      icon: "home-outline",
+    },
+    {
+      label: "Children",
+      href: "/(parent)/(tabs)/children",
+      icon: "people-outline",
+    },
+    {
+      label: "Messages",
+      href: "/(parent)/(tabs)/messages",
+      icon: "chatbubbles-outline",
+    },
+    {
+      label: "Notifications",
+      href: "/(parent)/notifications",
+      icon: "notifications-outline",
+    },
     {
       label: "Profile",
       href: "/(parent)/(tabs)/profile",
@@ -72,6 +152,46 @@ const menus: Record<AppRole, DrawerItem[]> = {
     },
   ],
   teacher: [
+    {
+      label: "Home",
+      href: "/(teacher)/(tabs)",
+      icon: "home-outline",
+    },
+    {
+      label: "Classes",
+      href: "/(teacher)/(tabs)/classes",
+      icon: "easel-outline",
+    },
+    {
+      label: "Students",
+      href: "/(teacher)/(tabs)/students",
+      icon: "people-outline",
+    },
+    {
+      label: "Work",
+      href: "/(teacher)/(tabs)/tasks",
+      icon: "reader-outline",
+    },
+    {
+      label: "Homework",
+      href: "/(teacher)/homework",
+      icon: "create-outline",
+    },
+    {
+      label: "Mark Attendance",
+      href: "/(teacher)/attendance",
+      icon: "checkbox-outline",
+    },
+    {
+      label: "Chat",
+      href: "/(teacher)/(tabs)/chat",
+      icon: "chatbubbles-outline",
+    },
+    {
+      label: "Notifications",
+      href: "/(teacher)/notifications",
+      icon: "notifications-outline",
+    },
     {
       label: "Profile",
       href: "/(teacher)/(tabs)/profile",

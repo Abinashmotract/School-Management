@@ -21,7 +21,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.SchoolAppF"
+      "package": "com.edvanceos.schoolapp",
+      "usesCleartextTraffic": true
     },
     "web": {
       "output": "static",
@@ -47,7 +48,11 @@
       "reactCompiler": true
     },
     "extra": {
-      "apiUrl": "http://10.142.37.60:8000/api"
+      "apiUrl": "http://10.230.169.129:8000/api",
+      "router": {},
+      "eas": {
+        "projectId": "d3c1f79d-9091-468c-8a8c-15c5eb8da623"
+      }
     }
   }
 }

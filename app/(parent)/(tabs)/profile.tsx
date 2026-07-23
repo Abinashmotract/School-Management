@@ -1,33 +1,147 @@
 import { Neutrals, RoleColors } from '@/constants/school-theme';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  childDisplayName,
+  fetchParentMe,
+  type ParentChild,
+  type ParentProfile,
+} from '@/lib/parent-portal-api';
+import { useAppSelector } from '@/store/hooks';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 const primary = RoleColors.parent.primary;
 
+function str(v: unknown): string {
+  if (v == null || v === '') return '—';
+  return String(v);
+}
+
 export default function ParentProfileScreen() {
+  const user = useAppSelector((s) => s.auth.user);
+  const [parent, setParent] = useState<ParentProfile | null>(null);
+  const [children, setChildren] = useState<ParentChild[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setError(null);
+    try {
+      const me = await fetchParentMe();
+      setParent(me.parent);
+      setChildren(me.children || []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not load profile.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={primary} />
+      </View>
+    );
+  }
+
+  const displayName =
+    parent?.parentName?.trim() ||
+    [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() ||
+    str(user?.username) ||
+    'Parent';
+  const initial = displayName.charAt(0).toUpperCase();
+  const email = str(user?.email);
+  const username = parent?.username || str(user?.username);
+  const phone = parent?.parentPhone || str(user?.contactNumber ?? user?.phone);
+
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => {
+            setRefreshing(true);
+            load();
+          }}
+        />
+      }
+    >
       <View style={styles.header}>
         <View style={[styles.avatar, { backgroundColor: `${primary}22` }]}>
-          <Text style={[styles.avatarText, { color: primary }]}>S</Text>
+          <Text style={[styles.avatarText, { color: primary }]}>{initial}</Text>
         </View>
-        <Text style={styles.name}>Mrs. Sharma</Text>
-        <Text style={styles.email}>parent@school.com</Text>
+        <Text style={styles.name}>{displayName}</Text>
+        {email !== '—' ? <Text style={styles.email}>{email}</Text> : null}
         <View style={[styles.badge, { backgroundColor: `${primary}18` }]}>
           <Text style={[styles.badgeText, { color: primary }]}>Parent / Guardian</Text>
         </View>
       </View>
-      <View style={styles.row}>
-        <Text style={styles.label}>Linked student</Text>
-        <Text style={styles.value}>Ankit Sharma</Text>
-      </View>
+
+      {error ? <Text style={styles.err}>{error}</Text> : null}
+
+      <Text style={styles.section}>Account</Text>
+      <InfoRow label="Username" value={username} />
+      <InfoRow label="Phone" value={phone} />
+      <InfoRow
+        label="Linked"
+        value={parent?.linked ? 'Yes' : 'No'}
+      />
+      <InfoRow
+        label="Children"
+        value={String(parent?.studentCount ?? children.length)}
+      />
+
+      <Text style={styles.section}>Linked students</Text>
+      {!children.length ? (
+        <Text style={styles.muted}>No students linked to this account.</Text>
+      ) : (
+        children.map((child) => (
+          <InfoRow
+            key={child.studentId}
+            label={childDisplayName(child)}
+            value={[child.className, child.section].filter(Boolean).join(' · ') || child.studentId}
+          />
+        ))
+      )}
     </ScrollView>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.row}>
+      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.value}>{value}</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Neutrals.bg },
   content: { padding: 20, paddingBottom: 40 },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Neutrals.bg,
+  },
+  err: { color: '#B91C1C', marginBottom: 12 },
+  muted: { fontSize: 13, color: Neutrals.muted, marginBottom: 8 },
   header: { alignItems: 'center', marginBottom: 24 },
   avatar: {
     width: 88,
@@ -47,13 +161,28 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   badgeText: { fontSize: 12, fontWeight: '600' },
+  section: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Neutrals.muted,
+    textTransform: 'uppercase',
+    marginTop: 8,
+    marginBottom: 8,
+  },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: Neutrals.border,
+    gap: 12,
   },
-  label: { fontSize: 15, color: Neutrals.muted },
-  value: { fontSize: 15, fontWeight: '600', color: Neutrals.text },
+  label: { fontSize: 15, color: Neutrals.muted, flexShrink: 1 },
+  value: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Neutrals.text,
+    flexShrink: 1,
+    textAlign: 'right',
+  },
 });

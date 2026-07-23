@@ -1,19 +1,17 @@
-import { DrawerSubHeader } from '@/components/navigation/DrawerSubHeader';
+import { ScreenShell } from '@/components/navigation/ScreenShell';
 import { LegalPage } from '@/components/screens/shared/LegalPage';
 import React from 'react';
-import { View } from 'react-native';
 
 export default function TeacherTermsScreen() {
   return (
-    <View style={{ flex: 1 }}>
-      <DrawerSubHeader title="Terms & Conditions" />
+    <ScreenShell role="teacher" title="Terms & Conditions" showBack showMenu>
       <LegalPage
-        title="Terms of use"
         paragraphs={[
-          'Teacher accounts are issued by the school for official instructional use.',
-          'You agree to protect student data and follow applicable education and privacy regulations.',
+          'By using SchoolApp you agree to follow school policies and acceptable use rules.',
+          'Staff accounts must be used for authorized school activities only.',
+          'Student data must be handled in accordance with school privacy policies.',
         ]}
       />
-    </View>
+    </ScreenShell>
   );
 }

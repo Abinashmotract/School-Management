@@ -1,7 +1,8 @@
 import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { fetchStudentProfile, type StudentProfile } from '@/lib/student-portal-api';
 import { useAppSelector } from '@/store/hooks';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const primary = RoleColors.student.primary;
 
@@ -12,8 +13,39 @@ function str(v: unknown): string {
 
 export default function StudentProfileScreen() {
   const user = useAppSelector((s) => s.auth.user);
-  const first = str(user?.firstName);
-  const last = str(user?.lastName);
+  const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setError(null);
+    try {
+      setProfile(await fetchStudentProfile());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not load profile.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={primary} />
+      </View>
+    );
+  }
+
+  const basic = profile?.basicInformation;
+  const academic = profile?.academicInformation;
+  const first = str(basic?.firstName ?? user?.firstName);
+  const last = str(basic?.lastName ?? user?.lastName);
   const displayName =
     first !== '—' || last !== '—'
       ? `${first !== '—' ? first : ''} ${last !== '—' ? last : ''}`.trim()
@@ -21,23 +53,48 @@ export default function StudentProfileScreen() {
   const initial = (first !== '—' ? first : 'S').charAt(0).toUpperCase();
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => {
+            setRefreshing(true);
+            load();
+          }}
+        />
+      }
+    >
       <View style={styles.header}>
         <View style={[styles.avatar, { backgroundColor: `${primary}18` }]}>
           <Text style={[styles.avatarText, { color: primary }]}>{initial}</Text>
         </View>
         <Text style={styles.name}>{displayName || 'Student'}</Text>
-        <Text style={styles.email}>{str(user?.email)}</Text>
+        <Text style={styles.email}>{str(basic?.email ?? user?.email)}</Text>
         <View style={[styles.badge, { backgroundColor: `${primary}18` }]}>
           <Text style={[styles.badgeText, { color: primary }]}>
-            Student · {str(user?.studentId ?? user?.username)}
+            Student · {str(profile?.studentId ?? user?.username)}
           </Text>
         </View>
       </View>
 
+      {error ? <Text style={styles.err}>{error}</Text> : null}
+
       <Text style={styles.section}>Account</Text>
-      <InfoRow label="Admission No." value={str(user?.admissionNumber)} />
-      <InfoRow label="Student ID" value={str(user?.studentId ?? user?.username)} />
+      <InfoRow label="Admission No." value={str(profile?.admissionNumber ?? user?.admissionNumber)} />
+      <InfoRow label="Student ID" value={str(profile?.studentId ?? user?.username)} />
+      <InfoRow label="Roll No." value={str(academic?.rollNumber)} />
+      <InfoRow label="Medium" value={str(academic?.mediumName ?? academic?.medium)} />
+      <InfoRow label="Class" value={str(academic?.className ?? academic?.admissionClass)} />
+      <InfoRow label="Section" value={str(academic?.sectionName ?? academic?.admissionSection)} />
+      <InfoRow label="Session" value={str(academic?.session)} />
+      <InfoRow label="Phone" value={str(basic?.phone ?? user?.contactNumber)} />
+
+      <Text style={styles.section}>Parent / Guardian</Text>
+      <InfoRow label="Father" value={str(profile?.parentInformation?.fatherName)} />
+      <InfoRow label="Father Phone" value={str(profile?.parentInformation?.fatherPhone)} />
+      <InfoRow label="Mother" value={str(profile?.parentInformation?.motherName)} />
     </ScrollView>
   );
 }
@@ -54,6 +111,8 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Neutrals.bg },
   content: { padding: 20, paddingBottom: 40 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Neutrals.bg },
+  err: { color: '#B91C1C', marginBottom: 12 },
   header: { alignItems: 'center', marginBottom: 24 },
   avatar: {
     width: 88,

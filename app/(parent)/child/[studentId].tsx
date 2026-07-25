@@ -1,5 +1,8 @@
 import { ScreenShell } from '@/components/navigation/ScreenShell';
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
+import { attendanceStatusLabel } from '@/lib/attendance-utils';
 import { useFeePayment } from '@/lib/use-fee-payment';
 import {
   attendancePercent,
@@ -33,11 +36,75 @@ const primary = RoleColors.parent.primary;
 
 type TabKey = 'attendance' | 'fees' | 'results' | 'timetable';
 
+const useLocalStyles = createThemedStyles((colors) => ({
+  content: { padding: 20, paddingBottom: 40 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg, padding: 24 },
+  hero: { flexDirection: 'row', gap: 14, alignItems: 'center', marginBottom: 16 },
+  avatar: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontSize: 24, fontWeight: '700' },
+  heroMeta: { fontSize: 13, color: colors.muted, marginTop: 2 },
+  tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+  tab: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+  },
+  tabActive: { backgroundColor: `${primary}18` },
+  tabText: { fontSize: 13, fontWeight: '600', color: colors.muted },
+  tabTextActive: { color: primary },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    gap: 12,
+  },
+  label: { fontSize: 14, color: colors.muted },
+  value: { fontSize: 14, fontWeight: '600', color: colors.text, flexShrink: 1, textAlign: 'right' },
+  subSection: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.muted,
+    textTransform: 'uppercase',
+    marginTop: 14,
+    marginBottom: 8,
+  },
+  listRow: {
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  listTitle: { fontSize: 14, fontWeight: '600', color: colors.text },
+  listMeta: { fontSize: 12, color: colors.muted, marginTop: 4 },
+  payBtn: {
+    marginTop: 16,
+    backgroundColor: primary,
+    borderRadius: 14,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  payBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  backBtn: { marginTop: 12, padding: 12 },
+  backBtnText: { color: primary, fontWeight: '600' },
+}));
+
+function useStyles() {
+  return { ...usePortalScreenStyles(), ...useLocalStyles() };
+}
+
 function money(n?: number) {
   return `₹${Number(n || 0).toLocaleString('en-IN')}`;
 }
 
 export default function ParentChildDetailScreen() {
+  const styles = useStyles();
   const { studentId } = useLocalSearchParams<{ studentId: string }>();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -175,7 +242,9 @@ export default function ParentChildDetailScreen() {
           {(attendance?.records || []).slice(0, 15).map((row) => (
             <View key={`${row.date}-${row._id || row.statusKey}`} style={styles.listRow}>
               <Text style={styles.listTitle}>{row.date}</Text>
-              <Text style={styles.listMeta}>{row.statusKey || '—'}</Text>
+              <Text style={styles.listMeta}>
+                {row.statusKey ? attendanceStatusLabel(row.statusKey as never) : 'Not marked'}
+              </Text>
             </View>
           ))}
         </View>
@@ -280,6 +349,7 @@ export default function ParentChildDetailScreen() {
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{label}</Text>
@@ -287,71 +357,3 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 20, paddingBottom: 40 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Neutrals.bg, padding: 24 },
-  backRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
-  backText: { fontSize: 16, fontWeight: '600', color: primary },
-  hero: { flexDirection: 'row', gap: 14, alignItems: 'center', marginBottom: 16 },
-  avatar: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 24, fontWeight: '700' },
-  heroName: { fontSize: 20, fontWeight: '700', color: Neutrals.text },
-  heroMeta: { fontSize: 13, color: Neutrals.muted, marginTop: 2 },
-  err: { color: '#B91C1C', marginBottom: 12 },
-  muted: { color: Neutrals.muted },
-  tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
-  tab: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: Neutrals.card,
-  },
-  tabActive: { backgroundColor: `${primary}18` },
-  tabText: { fontSize: 13, fontWeight: '600', color: Neutrals.muted },
-  tabTextActive: { color: primary },
-  panel: {
-    backgroundColor: Neutrals.card,
-    borderRadius: 20,
-    padding: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Neutrals.border,
-    gap: 12,
-  },
-  label: { fontSize: 14, color: Neutrals.muted },
-  value: { fontSize: 14, fontWeight: '600', color: Neutrals.text, flexShrink: 1, textAlign: 'right' },
-  subSection: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Neutrals.muted,
-    textTransform: 'uppercase',
-    marginTop: 14,
-    marginBottom: 8,
-  },
-  listRow: {
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Neutrals.border,
-  },
-  listTitle: { fontSize: 14, fontWeight: '600', color: Neutrals.text },
-  listMeta: { fontSize: 12, color: Neutrals.muted, marginTop: 4 },
-  payBtn: {
-    marginTop: 16,
-    backgroundColor: primary,
-    borderRadius: 14,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  payBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-  backBtn: { marginTop: 12, padding: 12 },
-  backBtnText: { color: primary, fontWeight: '600' },
-});

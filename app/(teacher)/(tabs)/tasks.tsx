@@ -1,4 +1,6 @@
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import {
   applyLeave,
   fetchLeaveBalance,
@@ -15,7 +17,6 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -29,7 +30,76 @@ type LeaveTypeBalance = {
   available?: number;
 };
 
+const useLocalStyles = createThemedStyles((colors) => ({
+  content: { padding: 16, paddingBottom: 40 },
+  section: { fontSize: 17, fontWeight: '700', color: colors.text, marginVertical: 12 },
+  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  link: { color: primary, fontWeight: '600' },
+  summary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: `${primary}12`,
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 8,
+  },
+  summaryValue: { fontSize: 22, fontWeight: '700', color: colors.text },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    padding: 14,
+    borderRadius: 16,
+    marginBottom: 10,
+  },
+  rowTitle: { fontSize: 14, fontWeight: '600', color: colors.text },
+  due: { fontSize: 12, color: colors.muted, marginTop: 4 },
+  form: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 8,
+  },
+  formLabel: { fontSize: 12, fontWeight: '700', color: colors.muted, marginBottom: 6, marginTop: 8 },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: colors.text,
+    backgroundColor: colors.input,
+  },
+  textArea: { minHeight: 80, textAlignVertical: 'top' },
+  submitBtn: {
+    marginTop: 14,
+    backgroundColor: primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  submitBtnText: { color: '#fff', fontWeight: '700' },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.input,
+    marginRight: 8,
+  },
+  chipActive: { backgroundColor: `${primary}18` },
+  chipText: { fontSize: 12, color: colors.muted, fontWeight: '600' },
+  chipTextActive: { color: primary },
+}));
+
 export default function TeacherTasksScreen() {
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -210,7 +280,7 @@ export default function TeacherTasksScreen() {
         <View key={x.planId || x._id || x.topicName} style={styles.row}>
           <Ionicons name="reader-outline" size={22} color={primary} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.title}>{x.topicName || 'Lesson'}</Text>
+            <Text style={styles.rowTitle}>{x.topicName || 'Lesson'}</Text>
             <Text style={styles.due}>
               {x.className || x.classId || 'Class'} · {x.subjectName || x.subjectId || 'Subject'} · {x.status || 'active'}
             </Text>
@@ -224,7 +294,7 @@ export default function TeacherTasksScreen() {
         <View key={x.applicationId || `${x.fromDate}-${x.toDate}`} style={styles.row}>
           <Ionicons name="calendar-outline" size={22} color={primary} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.title}>{x.leaveTypeId || 'Leave'}</Text>
+            <Text style={styles.rowTitle}>{x.leaveTypeId || 'Leave'}</Text>
             <Text style={styles.due}>
               {(x as { startDate?: string }).startDate || x.fromDate || '--'} to{' '}
               {(x as { endDate?: string }).endDate || x.toDate || '--'} · {x.status || 'pending'}
@@ -235,71 +305,3 @@ export default function TeacherTasksScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 16, paddingBottom: 40 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Neutrals.bg },
-  err: { color: '#B91C1C', marginBottom: 12 },
-  empty: { color: Neutrals.muted, marginBottom: 10 },
-  section: { fontSize: 17, fontWeight: '700', color: Neutrals.text, marginVertical: 12 },
-  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  link: { color: primary, fontWeight: '600' },
-  summary: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: `${primary}12`,
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 8,
-  },
-  summaryValue: { fontSize: 22, fontWeight: '700', color: Neutrals.text },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: Neutrals.card,
-    padding: 14,
-    borderRadius: 16,
-    marginBottom: 10,
-  },
-  title: { fontSize: 14, fontWeight: '600', color: Neutrals.text },
-  due: { fontSize: 12, color: Neutrals.muted, marginTop: 4 },
-  form: {
-    backgroundColor: Neutrals.card,
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 8,
-  },
-  formLabel: { fontSize: 12, fontWeight: '700', color: Neutrals.muted, marginBottom: 6, marginTop: 8 },
-  input: {
-    borderWidth: 1,
-    borderColor: Neutrals.border,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: Neutrals.text,
-    backgroundColor: Neutrals.bg,
-  },
-  textArea: { minHeight: 80, textAlignVertical: 'top' },
-  submitBtn: {
-    marginTop: 14,
-    backgroundColor: primary,
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  submitBtnText: { color: '#fff', fontWeight: '700' },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: Neutrals.bg,
-    marginRight: 8,
-  },
-  chipActive: { backgroundColor: `${primary}18` },
-  chipText: { fontSize: 12, color: Neutrals.muted, fontWeight: '600' },
-  chipTextActive: { color: primary },
-});

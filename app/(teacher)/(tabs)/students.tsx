@@ -1,4 +1,6 @@
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import {
   fetchTeacherAllocations,
   fetchTeacherStudents,
@@ -12,12 +14,37 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 
 const primary = RoleColors.teacher.primary;
+
+const useLocalStyles = createThemedStyles((colors) => ({
+  content: { padding: 16, paddingBottom: 40 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    padding: 14,
+    borderRadius: 16,
+    marginBottom: 10,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avText: { fontSize: 18, fontWeight: '700', color: primary },
+  name: { fontSize: 16, fontWeight: '600', color: colors.text },
+  meta: { fontSize: 12, color: colors.muted, marginTop: 2 },
+}));
 
 function studentName(row: TeacherStudentRow) {
   const basic = row.basicInformation || row.studentInformation?.basicInformation;
@@ -32,6 +59,7 @@ function studentId(row: TeacherStudentRow) {
 }
 
 export default function TeacherStudentsScreen() {
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,31 +139,3 @@ export default function TeacherStudentsScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 16, paddingBottom: 40 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Neutrals.bg },
-  err: { color: '#B91C1C', marginBottom: 12 },
-  empty: { color: Neutrals.muted },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: Neutrals.card,
-    padding: 14,
-    borderRadius: 16,
-    marginBottom: 10,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#ECFDF5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avText: { fontSize: 18, fontWeight: '700', color: primary },
-  name: { fontSize: 16, fontWeight: '600', color: Neutrals.text },
-  meta: { fontSize: 12, color: Neutrals.muted, marginTop: 2 },
-});

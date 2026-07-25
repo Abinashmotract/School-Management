@@ -1,5 +1,7 @@
 import type { AppRole } from "@/constants/school-theme";
-import { Neutrals, RoleColors } from "@/constants/school-theme";
+import { RoleColors } from "@/constants/school-theme";
+import { createThemedStyles, useThemeColors } from "@/hooks/create-themed-styles";
+import { usePortalScreenStyles } from "@/hooks/use-portal-screen-styles";
 import { fetchChatChannels, type ChatChannel } from "@/lib/chat-api";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -9,7 +11,6 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -18,6 +19,48 @@ type Props = {
   role: AppRole;
   showNewMessage?: boolean;
 };
+
+const useLocalStyles = createThemedStyles((colors) => ({
+  content: { padding: 16, paddingBottom: 40 },
+  titleRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 12 },
+  chatTitle: { fontSize: 24, fontWeight: "700", color: colors.text },
+  newBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  section: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.muted,
+    textTransform: "uppercase",
+    marginBottom: 8,
+  },
+  emptyBox: { alignItems: "center", gap: 8, paddingVertical: 48 },
+  emptyText: { color: colors.muted, textAlign: "center" },
+  chatRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 8,
+  },
+  icon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  name: { fontSize: 16, fontWeight: "700", color: colors.text },
+  preview: { fontSize: 13, color: colors.muted, marginTop: 4 },
+}));
 
 function channelIcon(channel: ChatChannel) {
   if (channel.channelType === "dm") return "person-circle-outline" as const;
@@ -33,6 +76,8 @@ function groupLabel(type: ChatChannel["channelType"]) {
 
 export default function ChatListScreen({ role, showNewMessage = true }: Props) {
   const primary = RoleColors[role].primary;
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
+  const { colors } = useThemeColors();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [channels, setChannels] = useState<ChatChannel[]>([]);
@@ -81,7 +126,7 @@ export default function ChatListScreen({ role, showNewMessage = true }: Props) {
     >
       <View style={styles.titleRow}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Chat</Text>
+          <Text style={styles.chatTitle}>Chat</Text>
           <Text style={styles.sub}>School channels and direct messages</Text>
         </View>
         {showNewMessage ? (
@@ -98,7 +143,7 @@ export default function ChatListScreen({ role, showNewMessage = true }: Props) {
 
       {channels.length === 0 ? (
         <View style={styles.emptyBox}>
-          <Ionicons name="chatbubbles-outline" size={28} color={Neutrals.muted} />
+          <Ionicons name="chatbubbles-outline" size={28} color={colors.muted} />
           <Text style={styles.emptyText}>No chat channels available yet.</Text>
         </View>
       ) : (
@@ -109,7 +154,7 @@ export default function ChatListScreen({ role, showNewMessage = true }: Props) {
               {items.map((channel) => (
                 <Pressable
                   key={channel.channelId}
-                  style={styles.row}
+                  style={styles.chatRow}
                   onPress={() => router.push(`${chatBase}/${channel.channelId}` as never)}
                 >
                   <View style={[styles.icon, { backgroundColor: `${primary}18` }]}>
@@ -131,47 +176,3 @@ export default function ChatListScreen({ role, showNewMessage = true }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 16, paddingBottom: 40 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: Neutrals.bg },
-  titleRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 12 },
-  title: { fontSize: 24, fontWeight: "700", color: Neutrals.text },
-  sub: { fontSize: 13, color: Neutrals.muted, marginTop: 4 },
-  newBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  err: { color: "#B91C1C", marginBottom: 10 },
-  section: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: Neutrals.muted,
-    textTransform: "uppercase",
-    marginBottom: 8,
-  },
-  emptyBox: { alignItems: "center", gap: 8, paddingVertical: 48 },
-  emptyText: { color: Neutrals.muted, textAlign: "center" },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: Neutrals.card,
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 8,
-  },
-  icon: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  name: { fontSize: 16, fontWeight: "700", color: Neutrals.text },
-  preview: { fontSize: 13, color: Neutrals.muted, marginTop: 4 },
-});

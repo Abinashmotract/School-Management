@@ -1,5 +1,7 @@
 import type { AppRole } from "@/constants/school-theme";
-import { Neutrals, RoleColors } from "@/constants/school-theme";
+import { RoleColors } from "@/constants/school-theme";
+import { createThemedStyles, useThemeColors } from "@/hooks/create-themed-styles";
+import { usePortalScreenStyles } from "@/hooks/use-portal-screen-styles";
 import {
   fetchParentNotices,
   fetchStudentEvents,
@@ -14,7 +16,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -25,6 +26,37 @@ type Props = {
   role: AppRole;
   mode: Mode;
 };
+
+const useLocalStyles = createThemedStyles((colors) => ({
+  content: { padding: 16, paddingBottom: 40 },
+  emptyBox: { alignItems: "center", gap: 8, paddingVertical: 48 },
+  emptyText: { color: colors.muted, textAlign: "center" },
+  cardHead: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
+  cardTitle: { flex: 1, fontSize: 16, fontWeight: "700", color: colors.text },
+  newBadge: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#2563EB",
+    backgroundColor: "#DBEAFE",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  metaRow: { gap: 4, marginBottom: 6 },
+  meta: { fontSize: 12, color: colors.muted },
+  category: {
+    alignSelf: "flex-start",
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.muted,
+    backgroundColor: colors.input,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+}));
 
 function stripHtml(html?: string) {
   if (!html) return "";
@@ -59,6 +91,8 @@ async function loadItems(role: AppRole, mode: Mode) {
 
 export default function PortalCommunicationScreen({ role, mode }: Props) {
   const primary = RoleColors[role].primary;
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
+  const { colors } = useThemeColors();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -119,14 +153,14 @@ export default function PortalCommunicationScreen({ role, mode }: Props) {
 
       {items.length === 0 ? (
         <View style={styles.emptyBox}>
-          <Ionicons name="megaphone-outline" size={28} color={Neutrals.muted} />
+          <Ionicons name="megaphone-outline" size={28} color={colors.muted} />
           <Text style={styles.emptyText}>No {mode} published right now.</Text>
         </View>
       ) : null}
 
       {mode === "notices"
         ? notices.map((notice) => (
-            <View key={notice.noticeId} style={styles.card}>
+            <View key={notice.noticeId} style={styles.cardBlock}>
               <View style={styles.cardHead}>
                 <Ionicons name="document-text-outline" size={20} color={primary} />
                 <Text style={styles.cardTitle}>{notice.title}</Text>
@@ -144,7 +178,7 @@ export default function PortalCommunicationScreen({ role, mode }: Props) {
             </View>
           ))
         : events.map((event) => (
-            <View key={event.announcementId} style={styles.card}>
+            <View key={event.announcementId} style={styles.cardBlock}>
               <View style={styles.cardHead}>
                 <Ionicons name="calendar-outline" size={20} color={primary} />
                 <Text style={styles.cardTitle}>{event.title}</Text>
@@ -164,46 +198,3 @@ export default function PortalCommunicationScreen({ role, mode }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 16, paddingBottom: 40 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: Neutrals.bg },
-  title: { fontSize: 22, fontWeight: "700", color: Neutrals.text },
-  sub: { fontSize: 14, color: Neutrals.muted, marginBottom: 16 },
-  err: { color: "#B91C1C", marginBottom: 12 },
-  emptyBox: { alignItems: "center", gap: 8, paddingVertical: 48 },
-  emptyText: { color: Neutrals.muted, textAlign: "center" },
-  card: {
-    backgroundColor: Neutrals.card,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-  },
-  cardHead: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
-  cardTitle: { flex: 1, fontSize: 16, fontWeight: "700", color: Neutrals.text },
-  newBadge: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#2563EB",
-    backgroundColor: "#DBEAFE",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  metaRow: { gap: 4, marginBottom: 6 },
-  meta: { fontSize: 12, color: Neutrals.muted },
-  category: {
-    alignSelf: "flex-start",
-    fontSize: 11,
-    fontWeight: "700",
-    color: Neutrals.muted,
-    backgroundColor: Neutrals.bg,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  body: { fontSize: 14, color: Neutrals.text, lineHeight: 22 },
-});

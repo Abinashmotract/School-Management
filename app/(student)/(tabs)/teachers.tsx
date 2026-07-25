@@ -1,4 +1,6 @@
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles, useThemeColors } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import {
   fetchStudentProfile,
   fetchStudentTeachers,
@@ -19,6 +21,95 @@ import {
 
 const primary = RoleColors.student.primary;
 
+const useLocalStyles = createThemedStyles((colors, isDark) => ({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  headerIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: { fontSize: 22, fontWeight: '800', color: colors.text },
+  section: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: colors.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 12,
+    marginBottom: 10,
+  },
+  teacherCard: {
+    flexDirection: 'row',
+    gap: 12,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 12,
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: { fontSize: 16, fontWeight: '900' },
+  teacherBody: { flex: 1 },
+  teacherTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+    alignItems: 'flex-start',
+  },
+  teacherName: { flex: 1, fontSize: 16, fontWeight: '800', color: colors.text },
+  teacherMeta: { fontSize: 13, color: primary, fontWeight: '700', marginTop: 2, marginBottom: 8 },
+  badge: {
+    backgroundColor: '#E0E7FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  badgeText: { color: '#3730A3', fontSize: 10, fontWeight: '800' },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  infoText: { flex: 1, fontSize: 12, color: colors.muted },
+  subjectCard: {
+    backgroundColor: isDark ? colors.input : '#F8FAFC',
+    borderRadius: 20,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  subjectHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  subjectName: { fontSize: 16, fontWeight: '800', color: colors.text },
+  subjectMeta: { fontSize: 12, color: colors.muted, marginTop: 2 },
+  subjectIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+}));
+
+function useStyles() {
+  return { ...usePortalScreenStyles(), ...useLocalStyles() };
+}
+
 function detail(value?: string) {
   return value && value.trim() ? value : '—';
 }
@@ -33,6 +124,7 @@ function initials(name?: string) {
 }
 
 export default function StudentTeachersScreen() {
+  const styles = useStyles();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,6 +216,7 @@ function TeacherCard({
   teacher: StudentTeacherProfile;
   badge?: string;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.teacherCard}>
       <View style={[styles.avatar, { backgroundColor: `${primary}18` }]}>
@@ -151,6 +244,7 @@ function TeacherCard({
 }
 
 function SubjectTeacherCard({ item }: { item: StudentSubjectTeacher }) {
+  const styles = useStyles();
   const teacher = item.teacher;
   return (
     <View style={styles.subjectCard}>
@@ -175,99 +269,12 @@ function SubjectTeacherCard({ item }: { item: StudentSubjectTeacher }) {
 }
 
 function InfoRow({ icon, text }: { icon: React.ComponentProps<typeof Ionicons>['name']; text: string }) {
+  const styles = useStyles();
+  const { colors } = useThemeColors();
   return (
     <View style={styles.infoRow}>
-      <Ionicons name={icon} size={14} color={Neutrals.muted} />
+      <Ionicons name={icon} size={14} color={colors.muted} />
       <Text style={styles.infoText}>{text}</Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Neutrals.bg },
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 20, paddingBottom: 40 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  headerIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: { fontSize: 22, fontWeight: '800', color: Neutrals.text },
-  sub: { fontSize: 14, color: Neutrals.muted, marginTop: 4 },
-  err: { color: '#B91C1C', marginBottom: 12 },
-  section: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: Neutrals.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 12,
-    marginBottom: 10,
-  },
-  empty: { color: Neutrals.muted, fontSize: 14, marginBottom: 12 },
-  teacherCard: {
-    flexDirection: 'row',
-    gap: 12,
-    backgroundColor: Neutrals.card,
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 12,
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { fontSize: 16, fontWeight: '900' },
-  teacherBody: { flex: 1 },
-  teacherTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-    alignItems: 'flex-start',
-  },
-  teacherName: { flex: 1, fontSize: 16, fontWeight: '800', color: Neutrals.text },
-  teacherMeta: { fontSize: 13, color: primary, fontWeight: '700', marginTop: 2, marginBottom: 8 },
-  badge: {
-    backgroundColor: '#E0E7FF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  badgeText: { color: '#3730A3', fontSize: 10, fontWeight: '800' },
-  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  infoText: { flex: 1, fontSize: 12, color: Neutrals.muted },
-  subjectCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 20,
-    padding: 12,
-    marginBottom: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Neutrals.border,
-  },
-  subjectHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  subjectName: { fontSize: 16, fontWeight: '800', color: Neutrals.text },
-  subjectMeta: { fontSize: 12, color: Neutrals.muted, marginTop: 2 },
-  subjectIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

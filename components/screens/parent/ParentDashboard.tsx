@@ -1,4 +1,5 @@
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { useDashboardStyles } from '@/hooks/use-dashboard-styles';
 import {
   attendancePercent,
   childClassLabel,
@@ -20,7 +21,6 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -29,6 +29,7 @@ const primary = RoleColors.parent.primary;
 
 export function ParentDashboard() {
   const router = useRouter();
+  const styles = useDashboardStyles();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -137,7 +138,7 @@ export function ParentDashboard() {
 
       {!children.length ? (
         <View style={styles.emptyBox}>
-          <Ionicons name="people-outline" size={28} color={Neutrals.muted} />
+          <Ionicons name="people-outline" size={28} color={styles.muted.color as string} />
           <Text style={styles.emptyTitle}>No children linked</Text>
           <Text style={styles.emptyText}>
             {infoMessage ||
@@ -218,7 +219,7 @@ export function ParentDashboard() {
                 style={styles.actionPill}
                 onPress={() => router.push(item.href as never)}
               >
-                <Text style={styles.actionText}>{item.label}</Text>
+                <Text style={styles.actionPillText}>{item.label}</Text>
               </Pressable>
             ))}
           </View>
@@ -227,125 +228,3 @@ export function ParentDashboard() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { paddingBottom: 32 },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Neutrals.bg,
-    gap: 10,
-  },
-  muted: { fontSize: 13, color: Neutrals.muted },
-  errBox: {
-    marginHorizontal: 16,
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: '#FEE2E2',
-  },
-  errText: { color: '#B91C1C', fontSize: 13 },
-  banner: {
-    margin: 16,
-    padding: 20,
-    borderRadius: 24,
-  },
-  bannerTitle: { fontSize: 20, fontWeight: '700', color: '#fff', marginBottom: 4 },
-  bannerSub: { fontSize: 13, color: 'rgba(255,255,255,0.9)', marginBottom: 12 },
-  dateBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  dateText: { fontSize: 12, color: '#fff' },
-  emptyBox: {
-    marginHorizontal: 16,
-    padding: 24,
-    borderRadius: 20,
-    backgroundColor: Neutrals.card,
-    alignItems: 'center',
-    gap: 8,
-  },
-  emptyTitle: { fontSize: 16, fontWeight: '700', color: Neutrals.text },
-  emptyText: { fontSize: 13, color: Neutrals.muted, textAlign: 'center' },
-  stats: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 12,
-    gap: 12,
-  },
-  statCard: {
-    width: '47%',
-    flexGrow: 1,
-    backgroundColor: Neutrals.card,
-    borderRadius: 20,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  statIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statN: { fontSize: 20, fontWeight: '700', color: Neutrals.text },
-  statL: { fontSize: 11, color: Neutrals.muted },
-  childCard: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    backgroundColor: Neutrals.card,
-    padding: 16,
-    borderRadius: 20,
-  },
-  avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avText: { fontSize: 22, fontWeight: '700' },
-  childName: { fontSize: 16, fontWeight: '700', color: Neutrals.text },
-  childMeta: { fontSize: 12, color: Neutrals.muted, marginTop: 2 },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: Neutrals.text,
-    marginHorizontal: 16,
-    marginTop: 20,
-    marginBottom: 12,
-  },
-  actions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-  },
-  actionPill: {
-    backgroundColor: Neutrals.card,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: Neutrals.border,
-  },
-  actionText: { fontSize: 13, fontWeight: '500', color: Neutrals.text },
-});

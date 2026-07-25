@@ -1,4 +1,6 @@
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles, useThemeColors } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import {
   childClassLabel,
   childDisplayName,
@@ -16,14 +18,69 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 
 const primary = RoleColors.parent.primary;
 
+const useLocalStyles = createThemedStyles((colors) => ({
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.bg,
+    gap: 10,
+  },
+  emptyBox: {
+    padding: 24,
+    borderRadius: 20,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    alignItems: 'center',
+    gap: 8,
+  },
+  emptyTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
+  emptyText: { fontSize: 13, color: colors.muted, textAlign: 'center' },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 12,
+  },
+  avatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avText: { fontSize: 22, fontWeight: '700' },
+  name: { fontSize: 17, fontWeight: '700', color: colors.text },
+  meta: { fontSize: 13, color: colors.muted, marginTop: 2 },
+  viewDetail: { fontSize: 12, color: primary, marginTop: 6 },
+  openDetail: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: `${primary}12`,
+  },
+  openDetailText: { color: primary, fontWeight: '600' },
+}));
+
 export default function ParentChildrenScreen() {
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
+  const { colors } = useThemeColors();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +121,7 @@ export default function ParentChildrenScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
+      <View style={styles.centered}>
         <ActivityIndicator size="large" color={primary} />
         <Text style={styles.muted}>Loading children…</Text>
       </View>
@@ -91,7 +148,7 @@ export default function ParentChildrenScreen() {
 
       {!children.length ? (
         <View style={styles.emptyBox}>
-          <Ionicons name="people-outline" size={28} color={Neutrals.muted} />
+          <Ionicons name="people-outline" size={28} color={colors.muted} />
           <Text style={styles.emptyTitle}>No children linked</Text>
           <Text style={styles.emptyText}>
             Ask your school admin to link your parent account to a student.
@@ -143,59 +200,3 @@ export default function ParentChildrenScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 20, paddingBottom: 40 },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Neutrals.bg,
-    gap: 10,
-  },
-  muted: { fontSize: 13, color: Neutrals.muted },
-  err: { color: '#B91C1C', marginBottom: 12 },
-  emptyBox: {
-    padding: 24,
-    borderRadius: 20,
-    backgroundColor: Neutrals.card,
-    alignItems: 'center',
-    gap: 8,
-  },
-  emptyTitle: { fontSize: 16, fontWeight: '700', color: Neutrals.text },
-  emptyText: { fontSize: 13, color: Neutrals.muted, textAlign: 'center' },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    backgroundColor: Neutrals.card,
-    padding: 16,
-    borderRadius: 20,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avText: { fontSize: 22, fontWeight: '700' },
-  name: { fontSize: 17, fontWeight: '700', color: Neutrals.text },
-  meta: { fontSize: 13, color: Neutrals.muted, marginTop: 2 },
-  viewDetail: { fontSize: 12, color: primary, marginTop: 6 },
-  openDetail: {
-    marginTop: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: `${primary}12`,
-  },
-  openDetailText: { color: primary, fontWeight: '600' },
-});

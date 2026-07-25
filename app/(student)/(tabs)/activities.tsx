@@ -1,4 +1,6 @@
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import {
   fetchStudentProfile,
   fetchTimetable,
@@ -11,14 +13,57 @@ import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 
 const primary = RoleColors.student.primary;
 
+const useLocalStyles = createThemedStyles((colors) => ({
+  dayBlock: { marginBottom: 18 },
+  dayTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 10,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  card: {
+    flexDirection: 'row',
+    gap: 12,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 10,
+  },
+  iconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardBody: { flex: 1 },
+  cardTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
+  cardTime: { fontSize: 13, color: colors.muted, marginTop: 4 },
+  venue: { fontSize: 13, color: primary, fontWeight: '600', marginTop: 4 },
+  tag: {
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    backgroundColor: '#E0E7FF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  tagText: { fontSize: 11, fontWeight: '700', color: '#3730A3' },
+}));
+
 export default function StudentActivitiesScreen() {
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,51 +141,3 @@ export default function StudentActivitiesScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Neutrals.bg },
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 20, paddingBottom: 40 },
-  title: { fontSize: 22, fontWeight: '700', color: Neutrals.text },
-  sub: { fontSize: 14, color: Neutrals.muted, marginBottom: 16 },
-  err: { color: '#B91C1C', marginBottom: 12 },
-  empty: { color: Neutrals.muted },
-  dayBlock: { marginBottom: 18 },
-  dayTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: Neutrals.text,
-    marginBottom: 10,
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  card: {
-    flexDirection: 'row',
-    gap: 12,
-    backgroundColor: Neutrals.card,
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 10,
-  },
-  iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardBody: { flex: 1 },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: Neutrals.text },
-  cardTime: { fontSize: 13, color: Neutrals.muted, marginTop: 4 },
-  venue: { fontSize: 13, color: primary, fontWeight: '600', marginTop: 4 },
-  tag: {
-    alignSelf: 'flex-start',
-    marginTop: 8,
-    backgroundColor: '#E0E7FF',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  tagText: { fontSize: 11, fontWeight: '700', color: '#3730A3' },
-});

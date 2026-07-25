@@ -1,4 +1,6 @@
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import {
   childDisplayName,
   fetchParentMe,
@@ -18,12 +20,63 @@ import {
 
 const primary = RoleColors.parent.primary;
 
+const useProfileStyles = createThemedStyles((colors) => ({
+  header: { alignItems: 'center', marginBottom: 24 },
+  avatar: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  avatarText: { fontSize: 36, fontWeight: '700' },
+  name: { fontSize: 22, fontWeight: '700', color: colors.text },
+  email: { fontSize: 14, color: colors.muted, marginTop: 4 },
+  badge: {
+    marginTop: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  badgeText: { fontSize: 12, fontWeight: '600' },
+  section: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.muted,
+    textTransform: 'uppercase',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    gap: 12,
+  },
+  label: { fontSize: 15, color: colors.muted, flexShrink: 1 },
+  value: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+}));
+
+function useStyles() {
+  return { ...usePortalScreenStyles(), ...useProfileStyles() };
+}
+
 function str(v: unknown): string {
   if (v == null || v === '') return '—';
   return String(v);
 }
 
 export default function ParentProfileScreen() {
+  const styles = useStyles();
   const user = useAppSelector((s) => s.auth.user);
   const [parent, setParent] = useState<ParentProfile | null>(null);
   const [children, setChildren] = useState<ParentChild[]>([]);
@@ -123,6 +176,7 @@ export default function ParentProfileScreen() {
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{label}</Text>
@@ -130,59 +184,3 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 20, paddingBottom: 40 },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Neutrals.bg,
-  },
-  err: { color: '#B91C1C', marginBottom: 12 },
-  muted: { fontSize: 13, color: Neutrals.muted, marginBottom: 8 },
-  header: { alignItems: 'center', marginBottom: 24 },
-  avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  avatarText: { fontSize: 36, fontWeight: '700' },
-  name: { fontSize: 22, fontWeight: '700', color: Neutrals.text },
-  email: { fontSize: 14, color: Neutrals.muted, marginTop: 4 },
-  badge: {
-    marginTop: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  badgeText: { fontSize: 12, fontWeight: '600' },
-  section: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Neutrals.muted,
-    textTransform: 'uppercase',
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Neutrals.border,
-    gap: 12,
-  },
-  label: { fontSize: 15, color: Neutrals.muted, flexShrink: 1 },
-  value: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Neutrals.text,
-    flexShrink: 1,
-    textAlign: 'right',
-  },
-});

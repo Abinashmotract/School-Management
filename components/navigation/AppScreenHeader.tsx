@@ -1,6 +1,6 @@
 import HeaderNotificationsButton from "@/components/notifications/HeaderNotificationsButton";
 import type { AppRole } from "@/constants/school-theme";
-import { Neutrals } from "@/constants/school-theme";
+import { useAppTheme } from "@/providers/AppThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerToggleButton } from "@react-navigation/drawer";
 import { router } from "expo-router";
@@ -28,6 +28,7 @@ export function AppScreenHeader({
   headerRight,
 }: Props) {
   const insets = useSafeAreaInsets();
+  const { colors } = useAppTheme();
 
   return (
     <View
@@ -35,29 +36,31 @@ export function AppScreenHeader({
         styles.bar,
         {
           paddingTop: Math.max(insets.top, Platform.OS === "android" ? 8 : 0),
+          backgroundColor: colors.header,
+          borderBottomColor: colors.border,
         },
       ]}
     >
       <View style={styles.left}>
         {showBack ? (
           <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconBtn}>
-            <Ionicons name="arrow-back" size={24} color={Neutrals.text} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </Pressable>
         ) : null}
         {showMenu ? (
           <DrawerToggleButton
-            tintColor={Neutrals.text}
-            pressColor={Platform.OS === "android" ? "rgba(0,0,0,0.08)" : undefined}
+            tintColor={colors.text}
+            pressColor={Platform.OS === "android" ? colors.pressed : undefined}
           />
         ) : null}
       </View>
 
       <View style={styles.center}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
           {title}
         </Text>
         {subtitle ? (
-          <Text style={styles.subtitle} numberOfLines={1}>
+          <Text style={[styles.subtitle, { color: colors.muted }]} numberOfLines={1}>
             {subtitle}
           </Text>
         ) : null}
@@ -77,9 +80,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 4,
     paddingBottom: 10,
-    backgroundColor: "#fff",
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Neutrals.border,
   },
   left: {
     flexDirection: "row",
@@ -104,12 +105,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 17,
-    fontWeight: "600",
-    color: Neutrals.text,
+    fontWeight: "700",
   },
   subtitle: {
     fontSize: 12,
-    color: Neutrals.muted,
     marginTop: 2,
   },
 });

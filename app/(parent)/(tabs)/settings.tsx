@@ -1,41 +1,32 @@
-import { Neutrals } from '@/constants/school-theme';
+import { createThemedStyles } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import React from 'react';
-import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ScrollView, Switch, Text, View } from 'react-native';
+
+const useLocalStyles = createThemedStyles((colors) => ({
+  section: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.muted,
+    marginBottom: 12,
+    textTransform: 'uppercase',
+  },
+}));
 
 export default function ParentSettingsScreen() {
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
+
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
       <Text style={styles.section}>Notifications</Text>
       <View style={styles.row}>
-        <Text style={styles.label}>Child updates</Text>
+        <Text style={styles.rowLabel}>Child updates</Text>
         <Switch value />
       </View>
       <View style={styles.row}>
-        <Text style={styles.label}>Fee reminders</Text>
+        <Text style={styles.rowLabel}>Fee reminders</Text>
         <Switch value />
       </View>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 20, paddingBottom: 40 },
-  section: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Neutrals.muted,
-    marginBottom: 12,
-    textTransform: 'uppercase',
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: Neutrals.card,
-    padding: 16,
-    borderRadius: 14,
-    marginBottom: 10,
-  },
-  label: { fontSize: 15, color: Neutrals.text },
-});

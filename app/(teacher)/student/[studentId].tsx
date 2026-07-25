@@ -1,5 +1,7 @@
 import { ScreenShell } from '@/components/navigation/ScreenShell';
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import { fetchTeacherHomework } from '@/lib/teacher-homework-api';
 import {
   fetchTeacherAllocations,
@@ -14,12 +16,72 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 
 const primary = RoleColors.teacher.primary;
+
+const useLocalStyles = createThemedStyles((colors) => ({
+  content: { padding: 16, paddingBottom: 40 },
+  hero: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 14,
+  },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: { fontSize: 24, fontWeight: '800', color: primary },
+  name: { fontSize: 20, fontWeight: '800', color: colors.text },
+  meta: { fontSize: 13, color: colors.muted, marginTop: 4 },
+  stats: { flexDirection: 'row', gap: 10, marginBottom: 14 },
+  statCard: {
+    flex: 1,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  statValue: { fontSize: 22, fontWeight: '800', color: colors.text },
+  statLabel: { fontSize: 12, color: colors.muted, marginTop: 4, fontWeight: '700' },
+  panelTitle: { fontSize: 15, fontWeight: '800', color: colors.text, marginBottom: 8 },
+  panelRow: { fontSize: 14, color: colors.text, marginBottom: 4 },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: primary,
+    borderRadius: 14,
+    paddingVertical: 14,
+    marginBottom: 10,
+  },
+  actionBtnText: { color: '#fff', fontWeight: '800', fontSize: 15 },
+  secondaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: `${primary}12`,
+    borderRadius: 14,
+    paddingVertical: 14,
+  },
+  secondaryBtnText: { color: primary, fontWeight: '800', fontSize: 15 },
+}));
 
 function studentName(row: TeacherStudentRow) {
   const basic = row.basicInformation || row.studentInformation?.basicInformation;
@@ -36,6 +98,7 @@ function studentId(row: TeacherStudentRow) {
 }
 
 export default function TeacherStudentDetailScreen() {
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
   const router = useRouter();
   const params = useLocalSearchParams<{ studentId?: string }>();
   const targetId = String(params.studentId || '');
@@ -147,70 +210,3 @@ export default function TeacherStudentDetailScreen() {
     </ScreenShell>
   );
 }
-
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scroll: { flex: 1 },
-  content: { padding: 16, paddingBottom: 40 },
-  err: { color: '#B91C1C', marginBottom: 12 },
-  empty: { color: Neutrals.muted },
-  hero: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    backgroundColor: Neutrals.card,
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 14,
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#ECFDF5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { fontSize: 24, fontWeight: '800', color: primary },
-  name: { fontSize: 20, fontWeight: '800', color: Neutrals.text },
-  meta: { fontSize: 13, color: Neutrals.muted, marginTop: 4 },
-  stats: { flexDirection: 'row', gap: 10, marginBottom: 14 },
-  statCard: {
-    flex: 1,
-    backgroundColor: Neutrals.card,
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-  },
-  statValue: { fontSize: 22, fontWeight: '800', color: Neutrals.text },
-  statLabel: { fontSize: 12, color: Neutrals.muted, marginTop: 4, fontWeight: '700' },
-  panel: {
-    backgroundColor: Neutrals.card,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 14,
-  },
-  panelTitle: { fontSize: 15, fontWeight: '800', color: Neutrals.text, marginBottom: 8 },
-  panelRow: { fontSize: 14, color: Neutrals.text, marginBottom: 4 },
-  actionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: primary,
-    borderRadius: 14,
-    paddingVertical: 14,
-    marginBottom: 10,
-  },
-  actionBtnText: { color: '#fff', fontWeight: '800', fontSize: 15 },
-  secondaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: `${primary}12`,
-    borderRadius: 14,
-    paddingVertical: 14,
-  },
-  secondaryBtnText: { color: primary, fontWeight: '800', fontSize: 15 },
-});

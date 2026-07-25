@@ -1,5 +1,7 @@
 import type { AppRole } from "@/constants/school-theme";
-import { Neutrals, RoleColors } from "@/constants/school-theme";
+import { RoleColors } from "@/constants/school-theme";
+import { createThemedStyles, useThemeColors } from "@/hooks/create-themed-styles";
+import { usePortalScreenStyles } from "@/hooks/use-portal-screen-styles";
 import {
   createOrGetDm,
   searchChatParticipants,
@@ -12,7 +14,6 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -22,8 +23,47 @@ type Props = {
   role: AppRole;
 };
 
+const useLocalStyles = createThemedStyles((colors) => ({
+  content: { padding: 16, paddingBottom: 40 },
+  searchBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  input: { flex: 1, fontSize: 15, color: colors.text },
+  chatRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    marginTop: 10,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: { fontSize: 18, fontWeight: "700" },
+  name: { fontSize: 16, fontWeight: "600", color: colors.text },
+  meta: { fontSize: 12, color: colors.muted, marginTop: 2 },
+}));
+
 export default function NewChatScreen({ role }: Props) {
   const primary = RoleColors[role].primary;
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
+  const { colors } = useThemeColors();
   const chatBase =
     role === "student" ? "/(student)/chat" : role === "parent" ? "/(parent)/chat" : "/(teacher)/chat";
   const audience = role === "teacher" ? "all" : role === "parent" ? "staff" : "staff";
@@ -78,11 +118,11 @@ export default function NewChatScreen({ role }: Props) {
       <Text style={styles.sub}>Search staff or students to start a direct chat</Text>
 
       <View style={styles.searchBox}>
-        <Ionicons name="search-outline" size={18} color={Neutrals.muted} />
+        <Ionicons name="search-outline" size={18} color={colors.muted} />
         <TextInput
           style={styles.input}
           placeholder="Search by name or username"
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={colors.muted}
           value={query}
           onChangeText={setQuery}
           autoCapitalize="none"
@@ -96,7 +136,7 @@ export default function NewChatScreen({ role }: Props) {
       {results.map((person) => (
         <Pressable
           key={person.username}
-          style={styles.row}
+          style={styles.chatRow}
           disabled={starting === person.username}
           onPress={() => void startDm(person.username)}
         >
@@ -125,41 +165,3 @@ export default function NewChatScreen({ role }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 16, paddingBottom: 40 },
-  title: { fontSize: 22, fontWeight: "700", color: Neutrals.text },
-  sub: { fontSize: 14, color: Neutrals.muted, marginBottom: 16 },
-  searchBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: Neutrals.card,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  input: { flex: 1, fontSize: 15, color: Neutrals.text },
-  err: { color: "#B91C1C", marginTop: 12 },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: Neutrals.card,
-    borderRadius: 16,
-    padding: 14,
-    marginTop: 10,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: { fontSize: 18, fontWeight: "700" },
-  name: { fontSize: 16, fontWeight: "600", color: Neutrals.text },
-  meta: { fontSize: 12, color: Neutrals.muted, marginTop: 2 },
-  empty: { color: Neutrals.muted, textAlign: "center", marginTop: 24 },
-});

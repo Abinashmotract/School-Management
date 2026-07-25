@@ -1,4 +1,6 @@
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import { fetchStudentProfile, type StudentProfile } from '@/lib/student-portal-api';
 import { useAppSelector } from '@/store/hooks';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -6,12 +8,57 @@ import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View }
 
 const primary = RoleColors.student.primary;
 
+const useProfileStyles = createThemedStyles((colors) => ({
+  header: { alignItems: 'center', marginBottom: 24 },
+  avatar: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  avatarText: { fontSize: 36, fontWeight: '700' },
+  name: { fontSize: 22, fontWeight: '700', color: colors.text },
+  email: { fontSize: 14, color: colors.muted, marginTop: 4 },
+  badge: {
+    marginTop: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  badgeText: { fontSize: 12, fontWeight: '600' },
+  section: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.muted,
+    marginTop: 16,
+    marginBottom: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  label: { fontSize: 15, color: colors.muted },
+  value: { fontSize: 15, fontWeight: '600', color: colors.text },
+}));
+
+function useStyles() {
+  return { ...usePortalScreenStyles(), ...useProfileStyles() };
+}
+
 function str(v: unknown): string {
   if (v == null) return '—';
   return String(v);
 }
 
 export default function StudentProfileScreen() {
+  const styles = useStyles();
   const user = useAppSelector((s) => s.auth.user);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -100,6 +147,7 @@ export default function StudentProfileScreen() {
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{label}</Text>
@@ -107,47 +155,3 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 20, paddingBottom: 40 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Neutrals.bg },
-  err: { color: '#B91C1C', marginBottom: 12 },
-  header: { alignItems: 'center', marginBottom: 24 },
-  avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  avatarText: { fontSize: 36, fontWeight: '700' },
-  name: { fontSize: 22, fontWeight: '700', color: Neutrals.text },
-  email: { fontSize: 14, color: Neutrals.muted, marginTop: 4 },
-  badge: {
-    marginTop: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  badgeText: { fontSize: 12, fontWeight: '600' },
-  section: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Neutrals.muted,
-    marginTop: 16,
-    marginBottom: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Neutrals.border,
-  },
-  label: { fontSize: 15, color: Neutrals.muted },
-  value: { fontSize: 15, fontWeight: '600', color: Neutrals.text },
-});

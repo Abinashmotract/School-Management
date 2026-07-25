@@ -1,4 +1,7 @@
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles, useThemeColors } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
+import { attendanceStatusLabel } from '@/lib/attendance-utils';
 import {
   fetchStudentAttendance,
   fetchStudentProfile,
@@ -22,6 +25,229 @@ import {
 
 const primary = RoleColors.student.primary;
 const compactCellSize = Math.floor((Dimensions.get('window').width - 40 - 24) / 7);
+
+const useAttendanceStyles = createThemedStyles((colors, isDark) => ({
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  headerIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoBox: {
+    backgroundColor: isDark ? '#1E3A5F' : '#EFF6FF',
+    borderColor: isDark ? '#1D4ED8' : '#BFDBFE',
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 14,
+  },
+  infoText: { fontSize: 12, color: colors.muted, lineHeight: 18 },
+  segment: {
+    flexDirection: 'row',
+    backgroundColor: isDark ? colors.input : '#E2E8F0',
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 14,
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 9,
+    borderRadius: 11,
+    alignItems: 'center',
+  },
+  segmentButtonActive: { backgroundColor: colors.card },
+  segmentText: { fontSize: 12, fontWeight: '700', color: colors.muted },
+  segmentTextActive: { color: primary },
+  overviewCard: {
+    backgroundColor: primary,
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  overviewLabel: { color: '#DBEAFE', fontSize: 13, fontWeight: '700' },
+  overviewValue: { color: '#FFFFFF', fontSize: 34, fontWeight: '900', marginTop: 4 },
+  overviewMeta: { color: '#E0F2FE', fontSize: 12, marginTop: 2 },
+  progressRing: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 6,
+    borderColor: '#BFDBFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressText: { color: '#FFFFFF', fontSize: 18, fontWeight: '900' },
+  progressSub: { color: '#E0F2FE', fontSize: 10, fontWeight: '700' },
+  summaryGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  summaryCard: {
+    width: '23%',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+  },
+  summaryValue: { fontSize: 24, fontWeight: '800' },
+  summaryLabel: { fontSize: 12, fontWeight: '700', marginTop: 2 },
+  selectedCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  selectedTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
+  selectedBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginTop: 8,
+  },
+  selectedBadgeText: { fontSize: 12, fontWeight: '800' },
+  selectedMeta: { color: colors.muted, fontSize: 13, marginTop: 6 },
+  legend: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 14,
+  },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  legendText: { fontSize: 12, fontWeight: '800' },
+  legendLabel: { fontSize: 12, color: colors.muted, fontWeight: '600' },
+  focusCard: {
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    padding: 18,
+    alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  focusLabel: { fontSize: 13, color: colors.muted, fontWeight: '700' },
+  focusDate: { fontSize: 18, fontWeight: '800', color: colors.text, marginTop: 4 },
+  focusStatus: {
+    marginTop: 16,
+    borderRadius: 18,
+    borderWidth: 1,
+    paddingVertical: 18,
+    width: '100%',
+    alignItems: 'center',
+  },
+  focusSymbol: { fontSize: 42, fontWeight: '900' },
+  focusStatusText: { fontSize: 14, fontWeight: '800', marginTop: 4 },
+  weekRow: { flexDirection: 'row', gap: 7 },
+  monthCard: {
+    backgroundColor: colors.card,
+    borderRadius: 18,
+    padding: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  weekHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  weekHeaderText: {
+    width: compactCellSize,
+    textAlign: 'center',
+    fontSize: 11,
+    fontWeight: '800',
+    color: colors.muted,
+  },
+  calendar: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+  dayCell: {
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 4,
+  },
+  weekdayText: { fontSize: 9, fontWeight: '800', marginBottom: 2 },
+  dayNumber: { fontSize: 10, fontWeight: '700' },
+  daySymbol: { fontSize: 15, fontWeight: '900', marginTop: 1 },
+  yearGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  monthSummary: {
+    width: '30.8%',
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  monthSummaryTitle: { fontSize: 13, fontWeight: '800', color: colors.text },
+  monthSummaryPercent: { fontSize: 22, fontWeight: '900', color: primary, marginTop: 8 },
+  monthSummaryMeta: { fontSize: 11, color: colors.muted, marginTop: 2 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.42)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  pickerCard: {
+    backgroundColor: colors.card,
+    borderRadius: 22,
+    padding: 16,
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  pickerNav: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: isDark ? colors.input : '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pickerTitle: { fontSize: 16, fontWeight: '800', color: colors.text },
+  pickerGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+  pickerDay: {
+    width: compactCellSize,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pickerDaySelected: { backgroundColor: primary },
+  pickerDayDisabled: { opacity: 0.35 },
+  pickerDayText: { fontSize: 13, fontWeight: '700', color: colors.text },
+  pickerDayTextSelected: { color: '#FFFFFF' },
+  pickerDayTextDisabled: { color: colors.muted },
+  closeButton: {
+    marginTop: 16,
+    borderRadius: 14,
+    backgroundColor: isDark ? colors.input : '#F1F5F9',
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  closeButtonText: { color: colors.text, fontSize: 14, fontWeight: '800' },
+}));
+
+function useStyles() {
+  return { ...usePortalScreenStyles(), ...useAttendanceStyles() };
+}
 
 type AttendanceSymbol = 'P' | 'A' | 'L' | 'e' | '—';
 type ViewMode = 'day' | 'week' | 'month' | 'year';
@@ -249,6 +475,7 @@ function buildPickerMonth(days: DayItem[], visibleMonth: Date) {
 }
 
 export default function StudentAttendanceScreen() {
+  const styles = useStyles();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -339,6 +566,13 @@ export default function StudentAttendanceScreen() {
 
       {error ? <Text style={styles.err}>{error}</Text> : null}
 
+      <View style={styles.infoBox}>
+        <Text style={styles.infoText}>
+          Present, absent, and late are marked manually by your teacher or school admin. Check-in
+          and check-out times appear here only when recorded by school devices.
+        </Text>
+      </View>
+
       <View style={styles.segment}>
         {VIEW_OPTIONS.map((option) => (
           <Pressable
@@ -385,13 +619,17 @@ export default function StudentAttendanceScreen() {
         </Text>
         <View style={[styles.selectedBadge, { backgroundColor: selectedConfig.bg }]}>
           <Text style={[styles.selectedBadgeText, { color: selectedConfig.fg }]}>
-            {selectedSymbol} · {selectedConfig.label}
+            {selected?.record?.statusKey
+              ? attendanceStatusLabel(selected.record.statusKey)
+              : selectedConfig.label}
           </Text>
         </View>
         {selected?.record?.checkInTime || selected?.record?.checkOutTime ? (
           <Text style={styles.selectedMeta}>
-            {selected.record.checkInTime || '--'} to {selected.record.checkOutTime || '--'}
+            Check-in/out: {selected.record.checkInTime || '--'} to {selected.record.checkOutTime || '--'}
           </Text>
+        ) : selected?.record?.statusKey && selected.record.statusKey !== 'not_marked' ? (
+          <Text style={styles.selectedMeta}>Manual attendance mark (no device punch recorded)</Text>
         ) : null}
         {selected?.record?.remarks ? <Text style={styles.selectedMeta}>{selected.record.remarks}</Text> : null}
       </View>
@@ -435,6 +673,7 @@ export default function StudentAttendanceScreen() {
 }
 
 function Legend() {
+  const styles = useStyles();
   return (
     <View style={styles.legend}>
       {(['P', 'A', 'L', 'e', '—'] as AttendanceSymbol[]).map((symbol) => {
@@ -453,6 +692,7 @@ function Legend() {
 }
 
 function DayView({ selected }: { selected?: DayItem }) {
+  const styles = useStyles();
   if (!selected) return null;
   const symbol = statusSymbol(selected.record?.statusKey);
   const config = STATUS_CONFIG[symbol];
@@ -477,6 +717,7 @@ function WeekView({
   selectedDate?: string;
   onSelect: (date: string) => void;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.weekRow}>
       {days.map((item) => (
@@ -502,6 +743,7 @@ function MonthView({
   selectedDate?: string;
   onSelect: (date: string) => void;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.monthCard}>
       <View style={styles.weekHeader}>
@@ -535,6 +777,7 @@ function YearView({
   months: MonthSummary[];
   onSelectMonth: (month: MonthSummary) => void;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.yearGrid}>
       {months.map((month) => {
@@ -566,6 +809,7 @@ function AttendanceCell({
   showWeekday?: boolean;
   onPress: () => void;
 }) {
+  const styles = useStyles();
   const symbol = statusSymbol(item.record?.statusKey);
   const config = STATUS_CONFIG[symbol];
   return (
@@ -607,19 +851,21 @@ function DatePickerModal({
   onNextMonth: () => void;
   onSelect: (date: string) => void;
 }) {
+  const styles = useStyles();
+  const { colors } = useThemeColors();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.modalOverlay} onPress={onClose}>
         <Pressable style={styles.pickerCard} onPress={() => undefined}>
           <View style={styles.pickerHeader}>
             <Pressable onPress={onPrevMonth} style={styles.pickerNav}>
-              <Ionicons name="chevron-back" size={20} color={Neutrals.text} />
+              <Ionicons name="chevron-back" size={20} color={colors.text} />
             </Pressable>
             <Text style={styles.pickerTitle}>
               {visibleMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
             </Text>
             <Pressable onPress={onNextMonth} style={styles.pickerNav}>
-              <Ionicons name="chevron-forward" size={20} color={Neutrals.text} />
+              <Ionicons name="chevron-forward" size={20} color={colors.text} />
             </Pressable>
           </View>
           <View style={styles.weekHeader}>
@@ -664,213 +910,3 @@ function DatePickerModal({
   );
 }
 
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Neutrals.bg },
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 20, paddingBottom: 40 },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  headerIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segment: {
-    flexDirection: 'row',
-    backgroundColor: '#E2E8F0',
-    borderRadius: 14,
-    padding: 4,
-    marginBottom: 14,
-  },
-  segmentButton: {
-    flex: 1,
-    paddingVertical: 9,
-    borderRadius: 11,
-    alignItems: 'center',
-  },
-  segmentButtonActive: { backgroundColor: Neutrals.card },
-  segmentText: { fontSize: 12, fontWeight: '700', color: Neutrals.muted },
-  segmentTextActive: { color: primary },
-  title: { fontSize: 22, fontWeight: '700', color: Neutrals.text },
-  sub: { fontSize: 14, color: Neutrals.muted, marginTop: 4 },
-  err: { color: '#B91C1C', marginBottom: 12 },
-  overviewCard: {
-    backgroundColor: primary,
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  overviewLabel: { color: '#DBEAFE', fontSize: 13, fontWeight: '700' },
-  overviewValue: { color: '#FFFFFF', fontSize: 34, fontWeight: '900', marginTop: 4 },
-  overviewMeta: { color: '#E0F2FE', fontSize: 12, marginTop: 2 },
-  progressRing: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    borderWidth: 6,
-    borderColor: '#BFDBFE',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  progressText: { color: '#FFFFFF', fontSize: 18, fontWeight: '900' },
-  progressSub: { color: '#E0F2FE', fontSize: 10, fontWeight: '700' },
-  summaryGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-
-  summaryCard: {
-    width: '23%',
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-  },
-  summaryValue: { fontSize: 24, fontWeight: '800' },
-  summaryLabel: { fontSize: 12, fontWeight: '700', marginTop: 2 },
-  selectedCard: {
-    backgroundColor: Neutrals.card,
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Neutrals.border,
-  },
-  selectedTitle: { fontSize: 16, fontWeight: '700', color: Neutrals.text },
-  selectedBadge: {
-    alignSelf: 'flex-start',
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginTop: 8,
-  },
-  selectedBadgeText: { fontSize: 12, fontWeight: '800' },
-  selectedMeta: { color: Neutrals.muted, fontSize: 13, marginTop: 6 },
-  legend: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 14,
-  },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  legendDot: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  legendText: { fontSize: 12, fontWeight: '800' },
-  legendLabel: { fontSize: 12, color: Neutrals.muted, fontWeight: '600' },
-  focusCard: {
-    backgroundColor: Neutrals.card,
-    borderRadius: 20,
-    padding: 18,
-    alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Neutrals.border,
-  },
-  focusLabel: { fontSize: 13, color: Neutrals.muted, fontWeight: '700' },
-  focusDate: { fontSize: 18, fontWeight: '800', color: Neutrals.text, marginTop: 4 },
-  focusStatus: {
-    marginTop: 16,
-    borderRadius: 18,
-    borderWidth: 1,
-    paddingVertical: 18,
-    width: '100%',
-    alignItems: 'center',
-  },
-  focusSymbol: { fontSize: 42, fontWeight: '900' },
-  focusStatusText: { fontSize: 14, fontWeight: '800', marginTop: 4 },
-  weekRow: { flexDirection: 'row', gap: 7 },
-  monthCard: {
-    backgroundColor: Neutrals.card,
-    borderRadius: 18,
-    padding: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Neutrals.border,
-  },
-  weekHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  weekHeaderText: { width: compactCellSize, textAlign: 'center', fontSize: 11, fontWeight: '800', color: Neutrals.muted },
-  calendar: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  dayCell: {
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 4,
-  },
-  weekdayText: { fontSize: 9, fontWeight: '800', marginBottom: 2 },
-  dayNumber: { fontSize: 10, fontWeight: '700' },
-  daySymbol: { fontSize: 15, fontWeight: '900', marginTop: 1 },
-  yearGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  monthSummary: {
-    width: '30.8%',
-    backgroundColor: Neutrals.card,
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Neutrals.border,
-  },
-  monthSummaryTitle: { fontSize: 13, fontWeight: '800', color: Neutrals.text },
-  monthSummaryPercent: { fontSize: 22, fontWeight: '900', color: primary, marginTop: 8 },
-  monthSummaryMeta: { fontSize: 11, color: Neutrals.muted, marginTop: 2 },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.42)',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  pickerCard: {
-    backgroundColor: Neutrals.card,
-    borderRadius: 22,
-    padding: 16,
-  },
-  pickerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-  pickerNav: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pickerTitle: { fontSize: 16, fontWeight: '800', color: Neutrals.text },
-  pickerGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  pickerDay: {
-    width: compactCellSize,
-    height: 38,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pickerDaySelected: { backgroundColor: primary },
-  pickerDayDisabled: { opacity: 0.35 },
-  pickerDayText: { fontSize: 13, fontWeight: '700', color: Neutrals.text },
-  pickerDayTextSelected: { color: '#FFFFFF' },
-  pickerDayTextDisabled: { color: Neutrals.muted },
-  closeButton: {
-    marginTop: 16,
-    borderRadius: 14,
-    backgroundColor: '#F1F5F9',
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  closeButtonText: { color: Neutrals.text, fontSize: 14, fontWeight: '800' },
-});

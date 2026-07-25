@@ -1,4 +1,6 @@
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import {
   fetchStudentHomework,
   submitHomework,
@@ -13,7 +15,6 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -21,7 +22,55 @@ import {
 
 const primary = RoleColors.student.primary;
 
+const useLocalStyles = createThemedStyles((colors) => ({
+  card: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+  },
+  cardHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  cardTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
+  cardMeta: { fontSize: 12, color: colors.muted, marginTop: 4 },
+  badge: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#D97706',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  badgeDone: { color: '#16A34A', backgroundColor: '#DCFCE7' },
+  desc: { fontSize: 13, color: colors.text, marginTop: 10, lineHeight: 20 },
+  form: { marginTop: 12 },
+  input: {
+    minHeight: 100,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 14,
+    color: colors.text,
+    textAlignVertical: 'top',
+    backgroundColor: colors.input,
+  },
+  submitBtn: {
+    marginTop: 10,
+    backgroundColor: primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  submitBtnText: { color: '#fff', fontWeight: '700' },
+  submittedText: { marginTop: 10, fontSize: 13, color: colors.muted },
+}));
+
 export default function StudentHomeworkScreen() {
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -150,55 +199,3 @@ export default function StudentHomeworkScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Neutrals.bg },
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 20, paddingBottom: 40 },
-  title: { fontSize: 22, fontWeight: '700', color: Neutrals.text },
-  sub: { fontSize: 14, color: Neutrals.muted, marginBottom: 16 },
-  err: { color: '#B91C1C', marginBottom: 12 },
-  empty: { color: Neutrals.muted },
-  card: {
-    backgroundColor: Neutrals.card,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-  },
-  cardHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: Neutrals.text },
-  cardMeta: { fontSize: 12, color: Neutrals.muted, marginTop: 4 },
-  badge: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#D97706',
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  badgeDone: { color: '#16A34A', backgroundColor: '#DCFCE7' },
-  desc: { fontSize: 13, color: Neutrals.text, marginTop: 10, lineHeight: 20 },
-  form: { marginTop: 12 },
-  input: {
-    minHeight: 100,
-    borderWidth: 1,
-    borderColor: Neutrals.border,
-    borderRadius: 12,
-    padding: 12,
-    fontSize: 14,
-    color: Neutrals.text,
-    textAlignVertical: 'top',
-    backgroundColor: Neutrals.bg,
-  },
-  submitBtn: {
-    marginTop: 10,
-    backgroundColor: primary,
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  submitBtnText: { color: '#fff', fontWeight: '700' },
-  submittedText: { marginTop: 10, fontSize: 13, color: Neutrals.muted },
-});

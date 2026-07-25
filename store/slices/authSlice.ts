@@ -1,5 +1,6 @@
 import type { AppRole } from "@/constants/school-theme";
 import { loginWithCredentials } from "@/lib/auth-api";
+import { withInstitutionUser } from "@/lib/drawer-profile";
 import {
   createAsyncThunk,
   createSlice,
@@ -80,10 +81,11 @@ export const loginStudent = createAsyncThunk(
       await SecureStore.setItemAsync(SK_ACCESS, result.data.accessToken);
       await SecureStore.setItemAsync(SK_REFRESH, result.data.refreshToken);
       await SecureStore.setItemAsync(SK_ROLE, 'student');
-      await SecureStore.setItemAsync(SK_USER, JSON.stringify(result.data.user));
+      const user = withInstitutionUser(result.data.user, result.data.institution);
+      await SecureStore.setItemAsync(SK_USER, JSON.stringify(user));
       return {
         accessToken: result.data.accessToken,
-        user: result.data.user,
+        user,
         isApiSession: true,
       };
     } catch (e) {
@@ -106,11 +108,11 @@ export const loginTeacher = createAsyncThunk(
         return rejectWithValue(result.message);
       }
 
-      const user = result.data.user;
-      const roleFromApi = String(user?.role || '').toUpperCase();
+      const userRaw = result.data.user;
+      const roleFromApi = String(userRaw?.role || '').toUpperCase();
       const isTeachingStaff =
-        user?.isTeachingStaff === true ||
-        String(user?.staffCategory || '').toLowerCase() === 'teaching';
+        userRaw?.isTeachingStaff === true ||
+        String(userRaw?.staffCategory || '').toLowerCase() === 'teaching';
 
       if (roleFromApi !== 'TEACHER' && !isTeachingStaff) {
         return rejectWithValue(
@@ -121,6 +123,7 @@ export const loginTeacher = createAsyncThunk(
       await SecureStore.setItemAsync(SK_ACCESS, result.data.accessToken);
       await SecureStore.setItemAsync(SK_REFRESH, result.data.refreshToken);
       await SecureStore.setItemAsync(SK_ROLE, 'teacher');
+      const user = withInstitutionUser(userRaw, result.data.institution);
       await SecureStore.setItemAsync(SK_USER, JSON.stringify(user));
 
       return {
@@ -148,8 +151,8 @@ export const loginParent = createAsyncThunk(
         return rejectWithValue(result.message);
       }
 
-      const user = result.data.user;
-      const roleFromApi = String(user?.role || '').toUpperCase();
+      const userRaw = result.data.user;
+      const roleFromApi = String(userRaw?.role || '').toUpperCase();
 
       if (roleFromApi !== 'PARENT') {
         return rejectWithValue(
@@ -160,6 +163,7 @@ export const loginParent = createAsyncThunk(
       await SecureStore.setItemAsync(SK_ACCESS, result.data.accessToken);
       await SecureStore.setItemAsync(SK_REFRESH, result.data.refreshToken);
       await SecureStore.setItemAsync(SK_ROLE, 'parent');
+      const user = withInstitutionUser(userRaw, result.data.institution);
       await SecureStore.setItemAsync(SK_USER, JSON.stringify(user));
 
       return {
@@ -208,6 +212,10 @@ const authSlice = createSlice({
     ) {
       state.accessToken = action.payload.accessToken;
       if (action.payload.user) state.user = action.payload.user;
+    },
+    patchUser(state, action: PayloadAction<Partial<AuthUser>>) {
+      if (!state.user) return;
+      state.user = { ...state.user, ...action.payload };
     },
   },
   extraReducers: (builder) => {
@@ -288,6 +296,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearLoginError, enterDemoRole, resetAuth, sessionRefreshed } =
+export const { clearLoginError, enterDemoRole, resetAuth, sessionRefreshed, patchUser } =
   authSlice.actions;
 export const authReducer = authSlice.reducer;

@@ -1,5 +1,7 @@
 import { ScreenShell } from '@/components/navigation/ScreenShell';
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import type { HomeworkSubmission } from '@/lib/homework-api';
 import {
   createHomework,
@@ -19,13 +21,98 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
 
 const primary = RoleColors.teacher.primary;
+
+const useLocalStyles = createThemedStyles((colors) => ({
+  content: { padding: 16, paddingBottom: 40 },
+  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  section: { fontSize: 17, fontWeight: '700', color: colors.text },
+  link: { color: primary, fontWeight: '600' },
+  form: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 12,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: colors.text,
+    backgroundColor: colors.input,
+    marginBottom: 8,
+  },
+  textArea: { minHeight: 80, textAlignVertical: 'top' },
+  submitBtn: {
+    marginTop: 8,
+    backgroundColor: primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  submitBtnText: { color: '#fff', fontWeight: '700' },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.input,
+    marginRight: 8,
+  },
+  chipActive: { backgroundColor: `${primary}18` },
+  chipText: { fontSize: 12, color: colors.muted, fontWeight: '600' },
+  chipTextActive: { color: primary },
+  card: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 10,
+  },
+  cardHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  cardTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
+  cardMeta: { fontSize: 12, color: colors.muted, marginTop: 4 },
+  badge: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: primary,
+    backgroundColor: `${primary}18`,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  submissions: { marginTop: 12, gap: 10 },
+  emptySub: { color: colors.muted, fontSize: 13 },
+  subRow: {
+    backgroundColor: colors.input,
+    borderRadius: 12,
+    padding: 12,
+  },
+  subName: { fontSize: 14, fontWeight: '700', color: colors.text },
+  subContent: { fontSize: 13, color: colors.text, marginTop: 6, lineHeight: 20 },
+  subStatus: { fontSize: 11, color: colors.muted, marginTop: 4, fontWeight: '700' },
+  gradeBtn: {
+    marginTop: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: primary,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  gradeBtnText: { color: '#fff', fontWeight: '700', fontSize: 12 },
+  graded: { fontSize: 13, color: '#047857', marginTop: 6, fontWeight: '600' },
+}));
 
 type ClassOption = {
   key: string;
@@ -56,6 +143,7 @@ function buildClassOptions(allocations: SubjectTeacherAllocation[]): ClassOption
 }
 
 export default function TeacherHomeworkScreen() {
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -299,79 +387,3 @@ export default function TeacherHomeworkScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scroll: { flex: 1 },
-  content: { padding: 16, paddingBottom: 40 },
-  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  section: { fontSize: 17, fontWeight: '700', color: Neutrals.text },
-  link: { color: primary, fontWeight: '600' },
-  err: { color: '#B91C1C', marginBottom: 12 },
-  empty: { color: Neutrals.muted, marginBottom: 12 },
-  form: { backgroundColor: Neutrals.card, borderRadius: 16, padding: 14, marginBottom: 12 },
-  label: { fontSize: 12, fontWeight: '700', color: Neutrals.muted, marginBottom: 6, marginTop: 8 },
-  input: {
-    borderWidth: 1,
-    borderColor: Neutrals.border,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: Neutrals.text,
-    backgroundColor: Neutrals.bg,
-    marginBottom: 8,
-  },
-  textArea: { minHeight: 80, textAlignVertical: 'top' },
-  submitBtn: {
-    marginTop: 8,
-    backgroundColor: primary,
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  submitBtnText: { color: '#fff', fontWeight: '700' },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: Neutrals.bg,
-    marginRight: 8,
-  },
-  chipActive: { backgroundColor: `${primary}18` },
-  chipText: { fontSize: 12, color: Neutrals.muted, fontWeight: '600' },
-  chipTextActive: { color: primary },
-  card: { backgroundColor: Neutrals.card, borderRadius: 16, padding: 14, marginBottom: 10 },
-  cardHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: Neutrals.text },
-  cardMeta: { fontSize: 12, color: Neutrals.muted, marginTop: 4 },
-  badge: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: primary,
-    backgroundColor: `${primary}18`,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  submissions: { marginTop: 12, gap: 10 },
-  emptySub: { color: Neutrals.muted, fontSize: 13 },
-  subRow: {
-    backgroundColor: Neutrals.bg,
-    borderRadius: 12,
-    padding: 12,
-  },
-  subName: { fontSize: 14, fontWeight: '700', color: Neutrals.text },
-  subContent: { fontSize: 13, color: Neutrals.text, marginTop: 6, lineHeight: 20 },
-  subStatus: { fontSize: 11, color: Neutrals.muted, marginTop: 4, fontWeight: '700' },
-  gradeBtn: {
-    marginTop: 6,
-    alignSelf: 'flex-start',
-    backgroundColor: primary,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  gradeBtnText: { color: '#fff', fontWeight: '700', fontSize: 12 },
-  graded: { fontSize: 13, color: '#047857', marginTop: 6, fontWeight: '600' },
-});

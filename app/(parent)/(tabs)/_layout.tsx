@@ -1,23 +1,16 @@
 import { HapticTab } from "@/components/haptic-tab";
-import { portalTabScreenOptions } from "@/components/navigation/portalTabOptions";
-import { RoleColors } from "@/constants/school-theme";
+import { usePortalTabScreenOptions } from "@/components/navigation/portalTabOptions";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 
-const tint = RoleColors.parent.tabActive;
-
 export default function ParentTabsLayout() {
+  const screenOptions = usePortalTabScreenOptions("parent");
+
   return (
     <Tabs
       screenOptions={{
-        ...portalTabScreenOptions("parent"),
-        tabBarActiveTintColor: tint,
-        tabBarInactiveTintColor: "#94A3B8",
-        tabBarStyle: {
-          borderTopColor: "#E2E8F0",
-          paddingTop: 4,
-        },
+        ...screenOptions,
         tabBarButton: HapticTab,
       }}
     >
@@ -61,6 +54,7 @@ export default function ParentTabsLayout() {
         name="settings"
         options={{
           title: "Settings",
+          href: null,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings-outline" size={size} color={color} />
           ),

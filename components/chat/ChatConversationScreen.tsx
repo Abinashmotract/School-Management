@@ -1,6 +1,8 @@
 import { AppScreenHeader } from "@/components/navigation/AppScreenHeader";
 import type { AppRole } from "@/constants/school-theme";
-import { Neutrals, RoleColors } from "@/constants/school-theme";
+import { RoleColors } from "@/constants/school-theme";
+import { createThemedStyles, themed, useThemeColors } from "@/hooks/create-themed-styles";
+import { usePortalScreenStyles } from "@/hooks/use-portal-screen-styles";
 import { useChatSocket } from "@/hooks/use-chat-socket";
 import {
   currentChatUsername,
@@ -27,6 +29,49 @@ type Props = {
   role: AppRole;
 };
 
+const useLocalStyles = createThemedStyles((colors, isDark) => ({
+  flex: { flex: 1, backgroundColor: colors.bg },
+  errBanner: { ...themed.errorText(isDark), paddingHorizontal: 16, paddingVertical: 8, fontSize: 13 },
+  listContent: { padding: 16, paddingBottom: 8 },
+  bubbleWrap: { marginBottom: 10, maxWidth: "85%" },
+  bubbleWrapMine: { alignSelf: "flex-end" },
+  bubbleWrapOther: { alignSelf: "flex-start" },
+  bubble: { borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10 },
+  bubbleOther: { backgroundColor: colors.card },
+  sender: { fontSize: 11, fontWeight: "700", color: colors.muted, marginBottom: 4 },
+  bubbleText: { fontSize: 15, color: colors.text },
+  bubbleTextMine: { color: "#fff" },
+  composer: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 8,
+    padding: 12,
+    backgroundColor: colors.card,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+  input: {
+    flex: 1,
+    minHeight: 42,
+    maxHeight: 120,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: colors.text,
+    backgroundColor: colors.input,
+  },
+  sendBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+}));
+
 function mergeMessages(existing: ChatMessage[], incoming: ChatMessage) {
   if (existing.some((m) => m.messageId === incoming.messageId)) return existing;
   return [...existing, incoming].sort(
@@ -37,6 +82,8 @@ function mergeMessages(existing: ChatMessage[], incoming: ChatMessage) {
 export default function ChatConversationScreen({ role }: Props) {
   const { channelId } = useLocalSearchParams<{ channelId: string }>();
   const primary = RoleColors[role].primary;
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
+  const { colors } = useThemeColors();
   const me = currentChatUsername();
   const listRef = useRef<FlatList<ChatMessage>>(null);
 
@@ -184,6 +231,7 @@ export default function ChatConversationScreen({ role }: Props) {
         <TextInput
           style={styles.input}
           placeholder="Type a message..."
+          placeholderTextColor={colors.muted}
           value={draft}
           onChangeText={setDraft}
           multiline
@@ -199,49 +247,3 @@ export default function ChatConversationScreen({ role }: Props) {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Neutrals.bg },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  err: { color: "#B91C1C" },
-  errBanner: { color: "#B91C1C", paddingHorizontal: 16, paddingVertical: 8, fontSize: 13 },
-  listContent: { padding: 16, paddingBottom: 8 },
-  empty: { textAlign: "center", color: Neutrals.muted, marginTop: 40 },
-  bubbleWrap: { marginBottom: 10, maxWidth: "85%" },
-  bubbleWrapMine: { alignSelf: "flex-end" },
-  bubbleWrapOther: { alignSelf: "flex-start" },
-  bubble: { borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10 },
-  bubbleOther: { backgroundColor: Neutrals.card },
-  sender: { fontSize: 11, fontWeight: "700", color: Neutrals.muted, marginBottom: 4 },
-  bubbleText: { fontSize: 15, color: Neutrals.text },
-  bubbleTextMine: { color: "#fff" },
-  composer: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 8,
-    padding: 12,
-    backgroundColor: Neutrals.card,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Neutrals.border,
-  },
-  input: {
-    flex: 1,
-    minHeight: 42,
-    maxHeight: 120,
-    borderWidth: 1,
-    borderColor: Neutrals.border,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: Neutrals.text,
-    backgroundColor: Neutrals.bg,
-  },
-  sendBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});

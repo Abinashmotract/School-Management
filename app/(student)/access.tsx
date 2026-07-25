@@ -1,11 +1,34 @@
 import { ScreenShell } from '@/components/navigation/ScreenShell';
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 const primary = RoleColors.student.primary;
+
+const useLocalStyles = createThemedStyles((colors) => ({
+  content: { padding: 16, paddingBottom: 40 },
+  intro: { fontSize: 14, color: colors.muted, marginBottom: 16, lineHeight: 20 },
+  card: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 16,
+    shadowColor: colors.shadow,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardTitle: { fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: 12 },
+  itemRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
+  itemText: { flex: 1, fontSize: 15, color: colors.text },
+  itemDisabled: { color: colors.muted },
+}));
 
 const features = [
   {
@@ -39,6 +62,7 @@ const features = [
 ];
 
 export default function StudentAccessScreen() {
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
   const router = useRouter();
 
   return (
@@ -73,23 +97,3 @@ export default function StudentAccessScreen() {
     </ScreenShell>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1 },
-  content: { padding: 16, paddingBottom: 40 },
-  intro: { fontSize: 14, color: Neutrals.muted, marginBottom: 16, lineHeight: 20 },
-  card: {
-    backgroundColor: Neutrals.card,
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardTitle: { fontSize: 17, fontWeight: '700', color: Neutrals.text, marginBottom: 12 },
-  itemRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
-  itemText: { flex: 1, fontSize: 15, color: Neutrals.text },
-  itemDisabled: { color: Neutrals.muted },
-});

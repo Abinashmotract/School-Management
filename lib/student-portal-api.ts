@@ -88,6 +88,21 @@ export type LessonPlanRow = {
   status?: "draft" | "active" | "completed";
 };
 
+export type StudyMaterialRow = {
+  materialId?: string;
+  title?: string;
+  subjectId?: string;
+  subjectName?: string;
+  classId?: string;
+  className?: string;
+  sectionId?: string;
+  sectionName?: string;
+  type?: "PDF" | "Video Link" | "Document" | "Link" | string;
+  fileUrl?: string;
+  externalUrl?: string;
+  createdAt?: string;
+};
+
 export type TimetableSlot = {
   _id?: string;
   day?: string;
@@ -201,7 +216,18 @@ export async function fetchLessonPlans(
     "/institute/academics/lesson-plans",
     { classId }
   );
-  return unwrapData<LessonPlanRow[]>(response);
+  const rows = unwrapData<LessonPlanRow[]>(response);
+  return rows.filter((row) => row.status !== "draft");
+}
+
+export async function fetchStudyMaterials(
+  profile?: StudentProfile
+): Promise<StudyMaterialRow[]> {
+  const response = await apiGet<{ success?: boolean; data?: StudyMaterialRow[] } | StudyMaterialRow[]>(
+    "/student/portal/study-materials",
+    { session: profile?.academicInformation?.session }
+  );
+  return unwrapData<StudyMaterialRow[]>(response);
 }
 
 export async function fetchTimetable(

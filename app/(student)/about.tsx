@@ -1,32 +1,14 @@
 import { ScreenShell } from '@/components/navigation/ScreenShell';
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
 const primary = RoleColors.student.primary;
 
-export default function StudentAboutScreen() {
-  return (
-    <ScreenShell role="student" title="About Us" showBack showMenu>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        <View style={[styles.hero, { backgroundColor: primary }]}>
-          <Ionicons name="school" size={48} color="#fff" />
-          <Text style={styles.heroTitle}>Empowering education</Text>
-          <Text style={styles.heroSub}>
-            SchoolApp connects students, teachers, and parents with simple, reliable tools.
-          </Text>
-        </View>
-        <Text style={styles.p}>
-          We build digital experiences that keep learning organized and communication clear.
-        </Text>
-      </ScrollView>
-    </ScreenShell>
-  );
-}
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1 },
+const useLocalStyles = createThemedStyles((colors) => ({
   content: { padding: 16, paddingBottom: 40 },
   hero: {
     borderRadius: 24,
@@ -47,5 +29,26 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
-  p: { fontSize: 15, lineHeight: 22, color: Neutrals.muted },
-});
+  p: { fontSize: 15, lineHeight: 22, color: colors.muted },
+}));
+
+export default function StudentAboutScreen() {
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
+
+  return (
+    <ScreenShell role="student" title="About Us" showBack showMenu>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+        <View style={[styles.hero, { backgroundColor: primary }]}>
+          <Ionicons name="school" size={48} color="#fff" />
+          <Text style={styles.heroTitle}>Empowering education</Text>
+          <Text style={styles.heroSub}>
+            SchoolApp connects students, teachers, and parents with simple, reliable tools.
+          </Text>
+        </View>
+        <Text style={styles.p}>
+          We build digital experiences that keep learning organized and communication clear.
+        </Text>
+      </ScrollView>
+    </ScreenShell>
+  );
+}

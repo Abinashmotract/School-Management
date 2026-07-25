@@ -5,7 +5,7 @@ import {
   getUsername,
   unwrapData,
 } from "@/lib/api-client";
-import type { LessonPlanRow } from "@/lib/student-portal-api";
+import type { AttendanceStatusKey, LessonPlanRow } from "@/lib/student-portal-api";
 
 type NamedRef = {
   name?: string;
@@ -152,12 +152,18 @@ function unwrapStudentList(response: unknown): TeacherStudentRow[] {
 
 export async function fetchTeacherStudents(
   _allocations?: TeacherAllocations,
-  session?: string
+  session?: string,
+  classId?: string,
+  sectionId?: string
 ): Promise<TeacherStudentRow[]> {
   const teacherUsername = currentTeacherUsername();
   if (!teacherUsername) return [];
 
-  const response = await apiGet<unknown>("/teacher/portal/students", { session });
+  const response = await apiGet<unknown>("/teacher/portal/students", {
+    session,
+    classId,
+    sectionId,
+  });
   return unwrapStudentList(response);
 }
 
@@ -194,8 +200,20 @@ export async function applyLeave(payload: {
 
 export type AttendanceMarkRow = {
   personId: string;
-  statusKey: "present" | "absent" | "late" | "leave";
+  statusKey: AttendanceStatusKey;
   studentName?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  remarks?: string;
+};
+
+export type ClassAttendanceRecord = {
+  personId?: string;
+  studentId?: string;
+  statusKey?: AttendanceStatusKey;
+  checkInTime?: string;
+  checkOutTime?: string;
+  remarks?: string;
 };
 
 export async function fetchClassAttendance(params: {
@@ -204,7 +222,7 @@ export async function fetchClassAttendance(params: {
   classId: string;
   sectionId: string;
 }) {
-  return apiGet<{ rows?: AttendanceMarkRow[]; records?: AttendanceMarkRow[] }>(
+  return apiGet<{ records?: ClassAttendanceRecord[]; rows?: ClassAttendanceRecord[] }>(
     "/teacher/portal/attendance/records",
     params
   );

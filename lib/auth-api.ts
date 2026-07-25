@@ -4,6 +4,7 @@ export type LoginSuccess = {
   accessToken: string;
   refreshToken: string;
   user: Record<string, unknown>;
+  institution?: Record<string, unknown> | null;
 };
 
 function parseErrorMessage(
@@ -86,6 +87,7 @@ export async function loginWithCredentials(
       accessToken: data.accessToken,
       refreshToken: data.refreshToken,
       user: data.user as Record<string, unknown>,
+      institution: (data as { institution?: Record<string, unknown> }).institution ?? null,
     },
   };
 }

@@ -1,4 +1,6 @@
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import { fetchStudentPaymentOptions } from '@/lib/payment-api';
 import { fetchStudentProfile, type StudentProfile } from '@/lib/student-portal-api';
 import { useFeePayment } from '@/lib/use-fee-payment';
@@ -8,7 +10,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   Pressable,
   View,
@@ -16,12 +17,56 @@ import {
 
 const primary = RoleColors.student.primary;
 
-function money(value: unknown) {
-  const n = Number(value || 0);
-  return n ? `₹${n.toLocaleString('en-IN')}` : '—';
-}
+const useLocalStyles = createThemedStyles((colors) => ({
+  summary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: `${primary}12`,
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 14,
+  },
+  summaryValue: { fontSize: 24, fontWeight: '700', color: colors.text },
+  summaryLabel: { fontSize: 13, color: colors.muted },
+  pendingBox: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  pendingLabel: { fontSize: 14, color: colors.muted },
+  pendingValue: { fontSize: 18, fontWeight: '700', color: colors.text },
+  payBtn: {
+    marginBottom: 14,
+    backgroundColor: primary,
+    borderRadius: 14,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  payBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  card: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+  },
+  cardSubject: { fontSize: 12, fontWeight: '700', color: primary, textTransform: 'uppercase' },
+  cardTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
+}));
 
 export default function StudentTasksScreen() {
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -133,53 +178,7 @@ export default function StudentTasksScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Neutrals.bg },
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 20, paddingBottom: 40 },
-  title: { fontSize: 22, fontWeight: '700', color: Neutrals.text },
-  sub: { fontSize: 14, color: Neutrals.muted, marginBottom: 16 },
-  err: { color: '#B91C1C', marginBottom: 12 },
-  empty: { color: Neutrals.muted },
-  summary: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    backgroundColor: `${primary}12`,
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 14,
-  },
-  summaryValue: { fontSize: 24, fontWeight: '700', color: Neutrals.text },
-  summaryLabel: { fontSize: 13, color: Neutrals.muted },
-  pendingBox: {
-    backgroundColor: Neutrals.card,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  pendingLabel: { fontSize: 14, color: Neutrals.muted },
-  pendingValue: { fontSize: 18, fontWeight: '700', color: Neutrals.text },
-  payBtn: {
-    marginBottom: 14,
-    backgroundColor: primary,
-    borderRadius: 14,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  payBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-  card: {
-    backgroundColor: Neutrals.card,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-  },
-  cardSubject: { fontSize: 12, fontWeight: '700', color: primary, textTransform: 'uppercase' },
-  cardTitle: { fontSize: 16, fontWeight: '600', color: Neutrals.text },
-});
+function money(value: unknown) {
+  const n = Number(value || 0);
+  return n ? `₹${n.toLocaleString('en-IN')}` : '—';
+}

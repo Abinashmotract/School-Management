@@ -1,4 +1,6 @@
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { createThemedStyles } from '@/hooks/create-themed-styles';
+import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import {
   fetchTeacherAllocations,
   fetchTeacherSchedule,
@@ -11,14 +13,51 @@ import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 
 const primary = RoleColors.teacher.primary;
 
+const useLocalStyles = createThemedStyles((colors) => ({
+  content: { padding: 16, paddingBottom: 40 },
+  section: { fontSize: 17, fontWeight: '700', color: colors.text, marginTop: 10, marginBottom: 10 },
+  dayBlock: { marginBottom: 12 },
+  dayHeading: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  card: {
+    flexDirection: 'row',
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 12,
+    shadowColor: colors.shadow,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  accent: { width: 4 },
+  body: { flex: 1, padding: 16 },
+  name: { fontSize: 16, fontWeight: '700', color: colors.text },
+  meta: { fontSize: 13, color: colors.muted, marginTop: 4 },
+  slot: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 10,
+  },
+}));
+
 export default function TeacherClassesScreen() {
+  const styles = { ...usePortalScreenStyles(), ...useLocalStyles() };
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -113,40 +152,3 @@ export default function TeacherClassesScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { padding: 16, paddingBottom: 40 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Neutrals.bg },
-  err: { color: '#B91C1C', marginBottom: 12 },
-  empty: { color: Neutrals.muted, marginBottom: 12 },
-  section: { fontSize: 17, fontWeight: '700', color: Neutrals.text, marginTop: 10, marginBottom: 10 },
-  dayBlock: { marginBottom: 12 },
-  dayHeading: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Neutrals.text,
-    marginBottom: 8,
-  },
-  card: {
-    flexDirection: 'row',
-    backgroundColor: Neutrals.card,
-    borderRadius: 20,
-    overflow: 'hidden',
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  accent: { width: 4 },
-  body: { flex: 1, padding: 16 },
-  name: { fontSize: 16, fontWeight: '700', color: Neutrals.text },
-  meta: { fontSize: 13, color: Neutrals.muted, marginTop: 4 },
-  slot: {
-    backgroundColor: Neutrals.card,
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 10,
-  },
-});

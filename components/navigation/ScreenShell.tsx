@@ -1,6 +1,6 @@
 import { AppScreenHeader } from "@/components/navigation/AppScreenHeader";
 import type { AppRole } from "@/constants/school-theme";
-import { Neutrals } from "@/constants/school-theme";
+import { useAppTheme } from "@/providers/AppThemeProvider";
 import React from "react";
 import { StyleSheet, View, type ViewStyle } from "react-native";
 
@@ -27,8 +27,10 @@ export function ScreenShell({
   children,
   style,
 }: Props) {
+  const { colors } = useAppTheme();
+
   return (
-    <View style={[styles.root, style]}>
+    <View style={[styles.root, { backgroundColor: colors.bg }, style]}>
       <AppScreenHeader
         role={role}
         title={title}
@@ -46,7 +48,6 @@ export function ScreenShell({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Neutrals.bg,
   },
   body: {
     flex: 1,

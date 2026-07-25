@@ -1,4 +1,5 @@
-import { Neutrals, RoleColors } from '@/constants/school-theme';
+import { RoleColors } from '@/constants/school-theme';
+import { useDashboardStyles } from '@/hooks/use-dashboard-styles';
 import {
   fetchStudentAttendance,
   fetchLessonPlans,
@@ -13,6 +14,11 @@ import {
   type TimetableSlot,
 } from '@/lib/student-portal-api';
 import { formatTimeRange12h } from '@/lib/timetable-format';
+import {
+  attendanceStatusColor,
+  attendanceStatusLabel,
+  localTodayYmd,
+} from '@/lib/attendance-utils';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -21,7 +27,6 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -44,10 +49,7 @@ function formatDate(d?: string) {
 }
 
 function todayKey() {
-  const dt = new Date();
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(
-    dt.getDate(),
-  ).padStart(2, '0')}`;
+  return localTodayYmd();
 }
 
 function formatSlot(slot: TimetableSlot) {
@@ -60,19 +62,11 @@ function money(value: unknown) {
 }
 
 function statusLabel(status?: AttendanceStatusKey) {
-  if (status === 'present' || status === 'half_day' || status === 'quarter_day') return 'Present';
-  if (status === 'late') return 'Late';
-  if (status === 'absent') return 'Absent';
-  if (status === 'leave') return 'Excused';
-  return 'Not marked';
+  return attendanceStatusLabel(status);
 }
 
 function statusColor(status?: AttendanceStatusKey) {
-  if (status === 'present' || status === 'half_day' || status === 'quarter_day') return '#16A34A';
-  if (status === 'late') return '#D97706';
-  if (status === 'absent') return '#DC2626';
-  if (status === 'leave') return '#2563EB';
-  return Neutrals.muted;
+  return attendanceStatusColor(status);
 }
 
 function attendanceRate(attendance: StudentAttendanceResponse | null) {
@@ -87,6 +81,7 @@ function attendanceRate(attendance: StudentAttendanceResponse | null) {
 
 export function StudentDashboard() {
   const router = useRouter();
+  const styles = useDashboardStyles();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -238,7 +233,9 @@ export function StudentDashboard() {
 
       <View style={styles.panel}>
         <View style={styles.panelHeader}>
-          <Text style={styles.sectionTitle}>Today at a glance</Text>
+          <Text style={[styles.sectionTitle, { marginHorizontal: 0, marginTop: 0, marginBottom: 0 }]}>
+            Today at a glance
+          </Text>
           <Text style={styles.panelHint}>{new Date().toLocaleDateString(undefined, { weekday: 'long' })}</Text>
         </View>
         <View style={styles.glanceRow}>
@@ -267,6 +264,8 @@ export function StudentDashboard() {
         title={scheduleTitle}
         action="View timetable"
         onPress={() => router.push('/(student)/(tabs)/activities' as never)}
+        styles={styles}
+        accentColor={primary}
       />
       {displaySlots.length === 0 ? (
         <Text style={styles.empty}>No timetable slots published yet.</Text>
@@ -306,6 +305,8 @@ export function StudentDashboard() {
         title="Current study plan"
         action="View all"
         onPress={() => router.push('/(student)/(tabs)/study' as never)}
+        styles={styles}
+        accentColor={primary}
       />
       {plans.length === 0 ? (
         <Text style={styles.empty}>No lesson plans published for your class yet.</Text>
@@ -336,251 +337,25 @@ function SectionHeader({
   title,
   action,
   onPress,
+  styles,
+  accentColor,
 }: {
   title: string;
   action?: string;
   onPress?: () => void;
+  styles: ReturnType<typeof useDashboardStyles>;
+  accentColor: string;
 }) {
   return (
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={[styles.sectionTitle, { marginHorizontal: 0, marginTop: 0, marginBottom: 0 }]}>
+        {title}
+      </Text>
       {action ? (
         <Pressable onPress={onPress}>
-          <Text style={styles.sectionAction}>{action}</Text>
+          <Text style={[styles.sectionAction, { color: accentColor }]}>{action}</Text>
         </Pressable>
       ) : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Neutrals.bg,
-    gap: 12,
-    padding: 24,
-  },
-  muted: { color: Neutrals.muted, fontSize: 14 },
-  scroll: { flex: 1, backgroundColor: Neutrals.bg },
-  content: { paddingBottom: 36 },
-  errBox: {
-    margin: 16,
-    padding: 12,
-    backgroundColor: '#FEF2F2',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FECACA',
-  },
-  errText: { color: '#B91C1C', fontSize: 14 },
-  heroWrap: { padding: 16, paddingBottom: 0 },
-  banner: {
-    padding: 20,
-    borderRadius: 24,
-  },
-  heroTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 16,
-    alignItems: 'flex-start',
-  },
-  greeting: { color: 'rgba(255,255,255,0.82)', fontSize: 13, fontWeight: '700' },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { color: '#fff', fontSize: 20, fontWeight: '900' },
-  bannerTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  bannerSub: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.9)',
-    marginBottom: 12,
-  },
-  heroMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  dateBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  dateText: { fontSize: 12, color: '#fff', fontWeight: '600' },
-  stats: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    paddingHorizontal: 16,
-    marginBottom: 12,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: '45%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: Neutrals.card,
-    padding: 14,
-    borderRadius: 16,
-  },
-  statIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statN: { fontSize: 18, fontWeight: '700', color: Neutrals.text },
-  statL: { fontSize: 12, color: Neutrals.muted },
-  quickActions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    paddingHorizontal: 16,
-    marginBottom: 14,
-  },
-  actionCard: {
-    flex: 1,
-    minWidth: '30%',
-    alignItems: 'center',
-    backgroundColor: Neutrals.card,
-    borderRadius: 16,
-    padding: 12,
-    gap: 8,
-  },
-  actionIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionText: { fontSize: 11, fontWeight: '700', color: Neutrals.text, textAlign: 'center' },
-  panel: {
-    marginHorizontal: 16,
-    backgroundColor: Neutrals.card,
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 16,
-  },
-  panelHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  panelHint: { color: Neutrals.muted, fontSize: 12, fontWeight: '700' },
-  glanceRow: { gap: 10 },
-  glanceItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 12,
-    borderRadius: 14,
-    backgroundColor: '#F8FAFC',
-  },
-  glanceLabel: { fontSize: 12, color: Neutrals.muted, fontWeight: '700' },
-  glanceValue: { fontSize: 15, color: Neutrals.text, fontWeight: '800', maxWidth: 240 },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    marginTop: 4,
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: Neutrals.text,
-  },
-  sectionAction: { fontSize: 13, fontWeight: '800', color: primary },
-  empty: {
-    paddingHorizontal: 24,
-    color: Neutrals.muted,
-    fontSize: 14,
-    marginBottom: 12,
-  },
-  scheduleCard: {
-    flexDirection: 'row',
-    gap: 12,
-    marginHorizontal: 16,
-    marginBottom: 10,
-    backgroundColor: Neutrals.card,
-    borderRadius: 16,
-    padding: 14,
-  },
-  timeIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scheduleBody: { flex: 1 },
-  feesCard: {
-    marginHorizontal: 16,
-    marginTop: 4,
-    marginBottom: 16,
-    padding: 18,
-    borderRadius: 20,
-    backgroundColor: '#ECFDF5',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  feesLabel: { fontSize: 13, fontWeight: '800', color: '#047857' },
-  feesValue: { fontSize: 24, fontWeight: '900', color: Neutrals.text, marginTop: 2 },
-  feesMeta: { fontSize: 12, color: '#047857', marginTop: 2 },
-  smallButton: {
-    backgroundColor: '#047857',
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-  },
-  smallButtonText: { color: '#fff', fontSize: 13, fontWeight: '800' },
-  card: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginBottom: 10,
-    backgroundColor: Neutrals.card,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  cardAccent: { width: 4 },
-  cardBody: { flex: 1, padding: 14 },
-  cardTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Neutrals.text,
-    marginBottom: 4,
-  },
-  cardMeta: { fontSize: 12, color: Neutrals.muted, marginBottom: 8 },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  due: { fontSize: 12, color: Neutrals.muted },
-  badge: {
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  badgeDone: { backgroundColor: '#D1FAE5' },
-  badgeText: { fontSize: 11, fontWeight: '700', color: Neutrals.text },
-});

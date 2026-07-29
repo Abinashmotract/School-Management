@@ -48,7 +48,7 @@
       "reactCompiler": true
     },
     "extra": {
-      "apiUrl": "https://api.edvanceos.com/api",
+      "apiUrl": "https://staging-api.edvanceos.com/api",
       "router": {},
       "eas": {
         "projectId": "d3c1f79d-9091-468c-8a8c-15c5eb8da623"

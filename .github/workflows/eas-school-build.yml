@@ -1,0 +1,61 @@
+name: School branded EAS build
+
+on:
+  repository_dispatch:
+    types: [school-app-build]
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: android | ios | all
+        required: true
+        default: android
+      profile:
+        description: preview | production
+        required: true
+        default: preview
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Prepare branding assets
+        env:
+          SCHOOL_SPLASH_URL: ${{ github.event.client_payload.SCHOOL_SPLASH_URL }}
+          SCHOOL_ICON_URL: ${{ github.event.client_payload.SCHOOL_ICON_URL }}
+        run: node ./scripts/prepare-branding.mjs
+
+      - name: Build
+        env:
+          SCHOOL_APP_NAME: ${{ github.event.client_payload.SCHOOL_APP_NAME }}
+          SCHOOL_SLUG: ${{ github.event.client_payload.SCHOOL_SLUG }}
+          SCHOOL_ANDROID_PACKAGE: ${{ github.event.client_payload.SCHOOL_ANDROID_PACKAGE }}
+          SCHOOL_IOS_BUNDLE_ID: ${{ github.event.client_payload.SCHOOL_IOS_BUNDLE_ID }}
+          SCHOOL_SCHEME: ${{ github.event.client_payload.SCHOOL_SCHEME }}
+          SCHOOL_SPLASH_URL: ${{ github.event.client_payload.SCHOOL_SPLASH_URL }}
+          SCHOOL_ICON_URL: ${{ github.event.client_payload.SCHOOL_ICON_URL }}
+          SCHOOL_API_URL: ${{ github.event.client_payload.SCHOOL_API_URL }}
+          SCHOOL_INSTITUTION_ID: ${{ github.event.client_payload.SCHOOL_INSTITUTION_ID }}
+          EAS_PROJECT_ID: ${{ github.event.client_payload.EAS_PROJECT_ID }}
+          EXPO_PUBLIC_API_URL: ${{ github.event.client_payload.SCHOOL_API_URL }}
+        run: |
+          PLATFORM="${{ github.event.client_payload.platform || github.event.inputs.platform || 'android' }}"
+          PROFILE="${{ github.event.client_payload.profile || github.event.inputs.profile || 'preview' }}"
+          npx eas-cli build --platform "$PLATFORM" --profile "$PROFILE" --non-interactive

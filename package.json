@@ -9,8 +9,9 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "build:apk": "eas build -p android --profile preview",
-    "build:aab": "eas build -p android --profile production"
+    "build:apk": "node ./scripts/prepare-branding.mjs && eas build -p android --profile preview",
+    "build:aab": "node ./scripts/prepare-branding.mjs && eas build -p android --profile production",
+    "prepare:branding": "node ./scripts/prepare-branding.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

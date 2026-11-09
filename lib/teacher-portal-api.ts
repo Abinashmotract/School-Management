@@ -105,6 +105,22 @@ function currentTeacherUsername() {
   return getUsername();
 }
 
+export async function fetchTeacherDashboard(session?: string) {
+  return apiGet<{
+    teacherScoped?: boolean;
+    stats?: {
+      students?: number;
+      classes?: number;
+      lessonPlans?: number;
+      leaves?: number;
+    };
+    allocations?: TeacherAllocations;
+    recentStudents?: TeacherStudentRow[];
+  }>("/teacher/portal/dashboard", {
+    session,
+  });
+}
+
 export async function fetchTeacherAllocations(): Promise<TeacherAllocations> {
   const teacherUsername = currentTeacherUsername();
   if (!teacherUsername) return { classTeacher: [], subjectTeacher: [] };

@@ -13,6 +13,30 @@ on:
         description: preview | production
         required: true
         default: preview
+      school_app_name:
+        description: App display name (manual test)
+        required: false
+        default: SchoolAppF
+      school_android_package:
+        description: Android package (manual test)
+        required: false
+        default: com.edvanceos.schoolapp
+      school_ios_bundle_id:
+        description: iOS bundle id (manual test)
+        required: false
+        default: com.edvanceos.schoolapp
+      school_splash_url:
+        description: Splash image URL (manual test)
+        required: false
+        default: ""
+      school_api_url:
+        description: API URL baked into the app
+        required: false
+        default: https://api.edvanceos.com/api
+      erp_build_id:
+        description: MobileAppBuild Mongo id (optional for manual)
+        required: false
+        default: ""
 
 jobs:
   build:
@@ -36,26 +60,164 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      - name: Resolve build env
+        id: vars
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RD_BUILD_ID: ${{ github.event.client_payload.buildId }}
+          RD_PLATFORM: ${{ github.event.client_payload.platform }}
+          RD_PROFILE: ${{ github.event.client_payload.profile }}
+          RD_APP_NAME: ${{ github.event.client_payload.env.SCHOOL_APP_NAME }}
+          RD_SLUG: ${{ github.event.client_payload.env.SCHOOL_SLUG }}
+          RD_ANDROID: ${{ github.event.client_payload.env.SCHOOL_ANDROID_PACKAGE }}
+          RD_IOS: ${{ github.event.client_payload.env.SCHOOL_IOS_BUNDLE_ID }}
+          RD_SCHEME: ${{ github.event.client_payload.env.SCHOOL_SCHEME }}
+          RD_SPLASH: ${{ github.event.client_payload.env.SCHOOL_SPLASH_URL }}
+          RD_ICON: ${{ github.event.client_payload.env.SCHOOL_ICON_URL }}
+          RD_API: ${{ github.event.client_payload.env.SCHOOL_API_URL }}
+          RD_INST: ${{ github.event.client_payload.env.SCHOOL_INSTITUTION_ID }}
+          RD_EAS: ${{ github.event.client_payload.env.EAS_PROJECT_ID }}
+          WD_PLATFORM: ${{ github.event.inputs.platform }}
+          WD_PROFILE: ${{ github.event.inputs.profile }}
+          WD_APP_NAME: ${{ github.event.inputs.school_app_name }}
+          WD_ANDROID: ${{ github.event.inputs.school_android_package }}
+          WD_IOS: ${{ github.event.inputs.school_ios_bundle_id }}
+          WD_SPLASH: ${{ github.event.inputs.school_splash_url }}
+          WD_API: ${{ github.event.inputs.school_api_url }}
+          WD_BUILD_ID: ${{ github.event.inputs.erp_build_id }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "repository_dispatch" ]; then
+            echo "buildId=${RD_BUILD_ID}" >> "$GITHUB_OUTPUT"
+            echo "platform=${RD_PLATFORM:-android}" >> "$GITHUB_OUTPUT"
+            echo "profile=${RD_PROFILE:-preview}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_APP_NAME=${RD_APP_NAME}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_SLUG=${RD_SLUG:-SchoolAppF}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_ANDROID_PACKAGE=${RD_ANDROID}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_IOS_BUNDLE_ID=${RD_IOS}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_SCHEME=${RD_SCHEME:-schoolappf}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_SPLASH_URL=${RD_SPLASH}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_ICON_URL=${RD_ICON:-$RD_SPLASH}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_API_URL=${RD_API}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_INSTITUTION_ID=${RD_INST}" >> "$GITHUB_OUTPUT"
+            echo "EAS_PROJECT_ID=${RD_EAS:-d3c1f79d-9091-468c-8a8c-15c5eb8da623}" >> "$GITHUB_OUTPUT"
+          else
+            echo "buildId=${WD_BUILD_ID}" >> "$GITHUB_OUTPUT"
+            echo "platform=${WD_PLATFORM:-android}" >> "$GITHUB_OUTPUT"
+            echo "profile=${WD_PROFILE:-preview}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_APP_NAME=${WD_APP_NAME:-SchoolAppF}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_SLUG=SchoolAppF" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_ANDROID_PACKAGE=${WD_ANDROID:-com.edvanceos.schoolapp}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_IOS_BUNDLE_ID=${WD_IOS:-com.edvanceos.schoolapp}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_SCHEME=schoolappf" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_SPLASH_URL=${WD_SPLASH}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_ICON_URL=${WD_SPLASH}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_API_URL=${WD_API:-https://api.edvanceos.com/api}" >> "$GITHUB_OUTPUT"
+            echo "SCHOOL_INSTITUTION_ID=" >> "$GITHUB_OUTPUT"
+            echo "EAS_PROJECT_ID=d3c1f79d-9091-468c-8a8c-15c5eb8da623" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Prepare branding assets
         env:
-          SCHOOL_SPLASH_URL: ${{ github.event.client_payload.SCHOOL_SPLASH_URL }}
-          SCHOOL_ICON_URL: ${{ github.event.client_payload.SCHOOL_ICON_URL }}
+          SCHOOL_SPLASH_URL: ${{ steps.vars.outputs.SCHOOL_SPLASH_URL }}
+          SCHOOL_ICON_URL: ${{ steps.vars.outputs.SCHOOL_ICON_URL }}
         run: node ./scripts/prepare-branding.mjs
 
-      - name: Build
+      - name: Build with EAS
+        id: eas
         env:
-          SCHOOL_APP_NAME: ${{ github.event.client_payload.SCHOOL_APP_NAME }}
-          SCHOOL_SLUG: ${{ github.event.client_payload.SCHOOL_SLUG }}
-          SCHOOL_ANDROID_PACKAGE: ${{ github.event.client_payload.SCHOOL_ANDROID_PACKAGE }}
-          SCHOOL_IOS_BUNDLE_ID: ${{ github.event.client_payload.SCHOOL_IOS_BUNDLE_ID }}
-          SCHOOL_SCHEME: ${{ github.event.client_payload.SCHOOL_SCHEME }}
-          SCHOOL_SPLASH_URL: ${{ github.event.client_payload.SCHOOL_SPLASH_URL }}
-          SCHOOL_ICON_URL: ${{ github.event.client_payload.SCHOOL_ICON_URL }}
-          SCHOOL_API_URL: ${{ github.event.client_payload.SCHOOL_API_URL }}
-          SCHOOL_INSTITUTION_ID: ${{ github.event.client_payload.SCHOOL_INSTITUTION_ID }}
-          EAS_PROJECT_ID: ${{ github.event.client_payload.EAS_PROJECT_ID }}
-          EXPO_PUBLIC_API_URL: ${{ github.event.client_payload.SCHOOL_API_URL }}
+          SCHOOL_APP_NAME: ${{ steps.vars.outputs.SCHOOL_APP_NAME }}
+          SCHOOL_SLUG: ${{ steps.vars.outputs.SCHOOL_SLUG }}
+          SCHOOL_ANDROID_PACKAGE: ${{ steps.vars.outputs.SCHOOL_ANDROID_PACKAGE }}
+          SCHOOL_IOS_BUNDLE_ID: ${{ steps.vars.outputs.SCHOOL_IOS_BUNDLE_ID }}
+          SCHOOL_SCHEME: ${{ steps.vars.outputs.SCHOOL_SCHEME }}
+          SCHOOL_SPLASH_URL: ${{ steps.vars.outputs.SCHOOL_SPLASH_URL }}
+          SCHOOL_ICON_URL: ${{ steps.vars.outputs.SCHOOL_ICON_URL }}
+          SCHOOL_API_URL: ${{ steps.vars.outputs.SCHOOL_API_URL }}
+          SCHOOL_INSTITUTION_ID: ${{ steps.vars.outputs.SCHOOL_INSTITUTION_ID }}
+          EAS_PROJECT_ID: ${{ steps.vars.outputs.EAS_PROJECT_ID }}
+          EXPO_PUBLIC_API_URL: ${{ steps.vars.outputs.SCHOOL_API_URL }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          PLATFORM="${{ github.event.client_payload.platform || github.event.inputs.platform || 'android' }}"
-          PROFILE="${{ github.event.client_payload.profile || github.event.inputs.profile || 'preview' }}"
-          npx eas-cli build --platform "$PLATFORM" --profile "$PROFILE" --non-interactive
+          set -euo pipefail
+          npx eas-cli build \
+            --platform "${{ steps.vars.outputs.platform }}" \
+            --profile "${{ steps.vars.outputs.profile }}" \
+            --non-interactive \
+            --json > eas-result.json
+          cat eas-result.json
+          node <<'NODE'
+          const fs = require('fs');
+          const raw = fs.readFileSync('eas-result.json', 'utf8').trim();
+          let parsed;
+          try { parsed = JSON.parse(raw); } catch {
+            // eas may print non-json lines; take last JSON array/object
+            const start = Math.max(raw.lastIndexOf('['), raw.lastIndexOf('{'));
+            parsed = JSON.parse(raw.slice(start));
+          }
+          const first = Array.isArray(parsed) ? parsed[0] : parsed;
+          const out = {
+            easBuildId: first?.id || '',
+            easBuildUrl: first?.buildDetailsPageUrl || (first?.id ? `https://expo.dev/builds/${first.id}` : ''),
+            artifactUrl: first?.artifacts?.buildUrl || first?.artifacts?.applicationArchiveUrl || '',
+            status: first?.status || 'finished',
+          };
+          fs.writeFileSync('eas-meta.json', JSON.stringify(out));
+          console.log('EAS_META', JSON.stringify(out));
+          NODE
+
+      - name: Notify ERP (APK URL + status)
+        if: always()
+        env:
+          ERP_BUILD_ID: ${{ steps.vars.outputs.buildId }}
+          SCHOOL_API_URL: ${{ steps.vars.outputs.SCHOOL_API_URL }}
+          SCHOOL_INSTITUTION_ID: ${{ steps.vars.outputs.SCHOOL_INSTITUTION_ID }}
+          CALLBACK_SECRET: ${{ secrets.ERP_BUILD_CALLBACK_SECRET }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ERP_BUILD_ID}" ]; then
+            echo "No ERP buildId — skip callback"
+            exit 0
+          fi
+          if [ -z "${CALLBACK_SECRET}" ]; then
+            echo "ERP_BUILD_CALLBACK_SECRET not set — skip callback (use Refresh in admin)"
+            exit 0
+          fi
+          if [ ! -f eas-meta.json ]; then
+            echo '{"easBuildId":"","easBuildUrl":"","artifactUrl":"","status":"errored"}' > eas-meta.json
+          fi
+          API_BASE="${SCHOOL_API_URL%/}"
+          export CALLBACK_URL="${API_BASE}/supar-admin/mobile-app/builds/ci-callback"
+          export META="$(cat eas-meta.json)"
+          if [ "$JOB_STATUS" = "success" ]; then export STATUS="finished"; else export STATUS="errored"; fi
+          node <<'NODE'
+          const meta = JSON.parse(process.env.META || '{}');
+          const body = {
+            buildId: process.env.ERP_BUILD_ID,
+            institutionId: process.env.SCHOOL_INSTITUTION_ID || '',
+            status: process.env.STATUS,
+            easBuildId: meta.easBuildId || '',
+            easBuildUrl: meta.easBuildUrl || '',
+            artifactUrl: meta.artifactUrl || '',
+            message: process.env.STATUS === 'finished'
+              ? 'Build finished — APK ready to download / scan.'
+              : 'EAS / Actions build failed.',
+          };
+          fetch(process.env.CALLBACK_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + process.env.CALLBACK_SECRET,
+              'X-Mobile-Build-Secret': process.env.CALLBACK_SECRET,
+            },
+            body: JSON.stringify(body),
+          }).then(async (res) => {
+            const text = await res.text();
+            console.log('callback', res.status, text);
+            if (!res.ok) process.exit(1);
+          }).catch((err) => {
+            console.error(err);
+            process.exit(1);
+          });
+          NODE

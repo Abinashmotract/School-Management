@@ -19,7 +19,8 @@ function brandingOrFallback(fileName: string, fallbackRelative: string) {
  */
 export default ({ config }: ConfigContext): ExpoConfig => {
   const appName = process.env.SCHOOL_APP_NAME || "SchoolAppF";
-  const slug = process.env.SCHOOL_SLUG || "SchoolAppF";
+  // Keep slug locked to the Expo project; changing it breaks EAS projectId matching.
+  const slug = "SchoolAppF";
   const scheme = process.env.SCHOOL_SCHEME || "schoolappf";
   const androidPackage = process.env.SCHOOL_ANDROID_PACKAGE || "com.edvanceos.schoolapp";
   const iosBundleId = process.env.SCHOOL_IOS_BUNDLE_ID || "com.edvanceos.schoolapp";

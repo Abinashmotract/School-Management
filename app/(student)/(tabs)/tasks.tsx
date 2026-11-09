@@ -1,7 +1,7 @@
 import { RoleColors } from '@/constants/school-theme';
 import { createThemedStyles } from '@/hooks/create-themed-styles';
 import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
-import { fetchStudentPaymentOptions } from '@/lib/payment-api';
+import { fetchStudentPaymentOptions, fetchStudentRefunds, refundMethodLabel, refundStatusLabel, type StudentRefund } from '@/lib/payment-api';
 import { fetchStudentProfile, type StudentProfile } from '@/lib/student-portal-api';
 import { useFeePayment } from '@/lib/use-fee-payment';
 import { Ionicons } from '@expo/vector-icons';
@@ -72,6 +72,7 @@ export default function StudentTasksScreen() {
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [paymentOptions, setPaymentOptions] = useState<Awaited<ReturnType<typeof fetchStudentPaymentOptions>> | null>(null);
+  const [refunds, setRefunds] = useState<StudentRefund[]>([]);
   const { paying, runPayment } = useFeePayment(paymentOptions);
 
   const load = useCallback(async () => {
@@ -82,6 +83,7 @@ export default function StudentTasksScreen() {
       setPaymentOptions(
         await fetchStudentPaymentOptions(data.academicInformation?.session).catch(() => null)
       );
+      setRefunds(await fetchStudentRefunds(data.academicInformation?.session).catch(() => []));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load fees.');
     } finally {
@@ -158,6 +160,24 @@ export default function StudentTasksScreen() {
               )}
             </Pressable>
           ) : null}
+
+          <Text style={styles.cardSubject}>Refunds</Text>
+          {refunds.length === 0 ? (
+            <Text style={[styles.summaryLabel, { marginBottom: 12 }]}>No refund requests yet.</Text>
+          ) : (
+            refunds.map((refund) => (
+              <View key={refund.refundId} style={styles.card}>
+                <Text style={styles.cardSubject}>{refund.feesTypeName || 'Fee refund'}</Text>
+                <Text style={styles.cardTitle}>{money(refund.amount)}</Text>
+                <Text style={styles.summaryLabel}>
+                  {refundStatusLabel(refund.status)}
+                  {refund.payoutMode ? ` · ${refundMethodLabel(refund.payoutMode)}` : ''}
+                  {refund.voucherNo ? ` · ${refund.voucherNo}` : ''}
+                </Text>
+                {refund.message ? <Text style={styles.summaryLabel}>{refund.message}</Text> : null}
+              </View>
+            ))
+          )}
 
           {[
             ['Session', fees.session || profile?.academicInformation?.session || '—'],

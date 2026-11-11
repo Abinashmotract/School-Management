@@ -18,7 +18,8 @@ import {
   type ParentChildFees,
   type ParentTimetableSlot,
 } from '@/lib/parent-portal-api';
-import { fetchChildPaymentOptions, fetchChildRefunds, refundMethodLabel, refundStatusLabel, type PaymentOptions, type StudentRefund } from '@/lib/payment-api';
+import { fetchChildPaymentOptions, fetchChildRefundOptions, fetchChildRefunds, refundMethodLabel, refundStatusLabel, requestChildRefund, type PaymentOptions, type RefundOption, type StudentRefund } from '@/lib/payment-api';
+import { RefundRequestForm } from '@/components/fees/RefundRequestForm';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -117,6 +118,7 @@ export default function ParentChildDetailScreen() {
   const [timetable, setTimetable] = useState<ParentTimetableSlot[]>([]);
   const [paymentOptions, setPaymentOptions] = useState<PaymentOptions | null>(null);
   const [refunds, setRefunds] = useState<StudentRefund[]>([]);
+  const [refundOptions, setRefundOptions] = useState<RefundOption[]>([]);
   const { paying, runPayment } = useFeePayment(paymentOptions);
 
   const load = useCallback(async () => {
@@ -128,13 +130,14 @@ export default function ParentChildDetailScreen() {
       setChild(match);
 
       const session = match?.session;
-      const [att, fee, res, tt, payOpts, refundRows] = await Promise.all([
+      const [att, fee, res, tt, payOpts, refundRows, refundChoices] = await Promise.all([
         fetchChildAttendance(studentId, { session, days: 60 }).catch(() => null),
         fetchChildFees(studentId, session).catch(() => null),
         fetchChildResults(studentId).catch(() => ({ results: [] })),
         fetchChildTimetable(studentId, session).catch(() => []),
         fetchChildPaymentOptions(studentId, session).catch(() => null),
         fetchChildRefunds(studentId, session).catch(() => []),
+        fetchChildRefundOptions(studentId, session).catch(() => []),
       ]);
 
       setAttendance(att);
@@ -143,6 +146,7 @@ export default function ParentChildDetailScreen() {
       setTimetable(Array.isArray(tt) ? tt : []);
       setPaymentOptions(payOpts);
       setRefunds(refundRows);
+      setRefundOptions(refundChoices);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load child details.');
     } finally {
@@ -281,22 +285,6 @@ export default function ParentChildDetailScreen() {
                 </Pressable>
               ) : null}
 
-              <Text style={styles.subSection}>Refunds</Text>
-              {refunds.length === 0 ? (
-                <Text style={styles.muted}>No refund requests yet.</Text>
-              ) : (
-                refunds.map((refund) => (
-                  <View key={refund.refundId} style={styles.listRow}>
-                    <Text style={styles.listTitle}>{refund.feesTypeName || 'Fee refund'}</Text>
-                    <Text style={styles.listMeta}>
-                      {money(refund.amount)} · {refundStatusLabel(refund.status)}
-                      {refund.payoutMode ? ` · ${refundMethodLabel(refund.payoutMode)}` : ''}
-                      {refund.voucherNo ? ` · ${refund.voucherNo}` : ''}
-                    </Text>
-                  </View>
-                ))
-              )}
-
               <Text style={styles.subSection}>Recent payments</Text>
               {(fees.recentPayments as { paymentDate?: string; totalPaid?: number; receiptNumber?: string }[]).length === 0 ? (
                 <Text style={styles.muted}>No payments recorded.</Text>
@@ -313,6 +301,32 @@ export default function ParentChildDetailScreen() {
             </>
           ) : (
             <Text style={styles.muted}>Fee details unavailable.</Text>
+          )}
+
+          <RefundRequestForm
+            options={refundOptions}
+            accent={primary}
+            onSubmit={async (body) => {
+              await requestChildRefund(child.studentId, { ...body, session: child.session });
+              await load();
+              return 'Request sent. The school will review it.';
+            }}
+          />
+
+          <Text style={styles.subSection}>Refunds</Text>
+          {refunds.length === 0 ? (
+            <Text style={styles.muted}>No refund requests yet.</Text>
+          ) : (
+            refunds.map((refund) => (
+              <View key={refund.refundId} style={styles.listRow}>
+                <Text style={styles.listTitle}>{refund.feesTypeName || 'Fee refund'}</Text>
+                <Text style={styles.listMeta}>
+                  {money(refund.amount)} · {refundStatusLabel(refund.status)}
+                  {refund.payoutMode ? ` · ${refundMethodLabel(refund.payoutMode)}` : ''}
+                  {refund.voucherNo ? ` · ${refund.voucherNo}` : ''}
+                </Text>
+              </View>
+            ))
           )}
         </View>
       ) : null}

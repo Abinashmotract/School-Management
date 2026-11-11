@@ -4,7 +4,7 @@ import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import { fetchStudentProfile, type StudentProfile } from '@/lib/student-portal-api';
 import { useAppSelector } from '@/store/hooks';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const primary = RoleColors.student.primary;
 
@@ -114,9 +114,13 @@ export default function StudentProfileScreen() {
       }
     >
       <View style={styles.header}>
-        <View style={[styles.avatar, { backgroundColor: `${primary}18` }]}>
-          <Text style={[styles.avatarText, { color: primary }]}>{initial}</Text>
-        </View>
+        {basic?.photo ? (
+          <Image source={{ uri: basic.photo }} style={[styles.avatar, { backgroundColor: `${primary}18` }]} />
+        ) : (
+          <View style={[styles.avatar, { backgroundColor: `${primary}18` }]}>
+            <Text style={[styles.avatarText, { color: primary }]}>{initial}</Text>
+          </View>
+        )}
         <Text style={styles.name}>{displayName || 'Student'}</Text>
         <Text style={styles.email}>{str(basic?.email ?? user?.email)}</Text>
         <View style={[styles.badge, { backgroundColor: `${primary}18` }]}>
@@ -137,11 +141,15 @@ export default function StudentProfileScreen() {
       <InfoRow label="Section" value={str(academic?.sectionName ?? academic?.admissionSection)} />
       <InfoRow label="Session" value={str(academic?.session)} />
       <InfoRow label="Phone" value={str(basic?.phone ?? user?.contactNumber)} />
+      <InfoRow label="Date of birth" value={str(basic?.dateOfBirth).slice(0, 10)} />
+      <InfoRow label="Address" value={[basic?.address, basic?.city, basic?.state, basic?.pincode].filter((part) => part && part !== '—').join(', ') || '—'} />
+      <InfoRow label="House" value={str(academic?.houseName || profile?.houseName)} />
 
       <Text style={styles.section}>Parent / Guardian</Text>
       <InfoRow label="Father" value={str(profile?.parentInformation?.fatherName)} />
       <InfoRow label="Father Phone" value={str(profile?.parentInformation?.fatherPhone)} />
       <InfoRow label="Mother" value={str(profile?.parentInformation?.motherName)} />
+      <InfoRow label="Mother Phone" value={str(profile?.parentInformation?.motherPhone)} />
     </ScrollView>
   );
 }

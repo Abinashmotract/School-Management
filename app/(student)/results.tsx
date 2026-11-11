@@ -7,8 +7,10 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Pressable,
   RefreshControl,
   ScrollView,
+  Share,
   Text,
   View,
 } from 'react-native';
@@ -81,22 +83,37 @@ export default function StudentResultsScreen() {
             </View>
           ) : null}
 
-          {rows.map((row, index) => (
-            <View key={String(row._id || row.examId || index)} style={styles.card}>
-              <Text style={styles.cardTitle}>
-                {row.examName || row.subjectName || row.subjectId || 'Exam'}
-              </Text>
-              <View style={styles.metaRow}>
-                {row.marksObtained != null ? (
-                  <Text style={styles.meta}>Marks: {String(row.marksObtained)}</Text>
-                ) : null}
-                {row.maxMarks != null ? (
-                  <Text style={styles.meta}>Max: {String(row.maxMarks)}</Text>
-                ) : null}
-                {row.grade ? <Text style={styles.meta}>Grade: {row.grade}</Text> : null}
+          {Object.entries(rows.reduce<Record<string, StudentResultRow[]>>((groups, row) => {
+            const key = row.examName || row.examId || 'Exam';
+            groups[key] = groups[key] || [];
+            groups[key].push(row);
+            return groups;
+          }, {})).map(([exam, subjects]) => {
+            const obtained = subjects.reduce((sum, row) => sum + Number(row.marksObtained || 0), 0);
+            const max = subjects.reduce((sum, row) => sum + Number(row.maxMarks || 0), 0);
+            const percentage = max > 0 ? Math.round((obtained / max) * 10) / 10 : null;
+            const report = [
+              exam,
+              percentage != null ? `Percentage: ${percentage}%` : '',
+              ...subjects.map((row) => `${row.subjectName || row.subjectId}: ${row.marksObtained ?? '—'} / ${row.maxMarks ?? '—'}${row.grade ? ` (${row.grade})` : ''}`),
+            ].filter(Boolean).join('\n');
+            return (
+              <View key={exam} style={styles.card}>
+                <Text style={styles.cardTitle}>{exam}</Text>
+                {percentage != null ? <Text style={styles.meta}>Percentage {percentage}%</Text> : null}
+                {subjects.map((row, index) => (
+                  <View key={String(row._id || index)} style={styles.metaRow}>
+                    <Text style={styles.meta}>{row.subjectName || row.subjectId || 'Subject'}</Text>
+                    <Text style={styles.meta}>{row.marksObtained ?? '—'} / {row.maxMarks ?? '—'}</Text>
+                    {row.grade ? <Text style={styles.meta}>{row.grade}</Text> : null}
+                  </View>
+                ))}
+                <Pressable onPress={() => void Share.share({ message: report })}>
+                  <Text style={[styles.meta, { color: primary, marginTop: 8 }]}>Share report card</Text>
+                </Pressable>
               </View>
-            </View>
-          ))}
+            );
+          })}
         </ScrollView>
       )}
     </ScreenShell>

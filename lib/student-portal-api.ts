@@ -1,4 +1,4 @@
-import { apiGet, unwrapData } from "@/lib/api-client";
+import { apiGet, apiPost, unwrapData } from "@/lib/api-client";
 
 export type BasicInformation = {
   firstName?: string;
@@ -265,7 +265,68 @@ export type StudentResultRow = {
   marksObtained?: number;
   maxMarks?: number;
   grade?: string;
+  percentage?: number | null;
+  remarks?: string;
   session?: string;
+};
+
+export type StudentFeePayment = {
+  paymentId?: string;
+  invoiceId?: string;
+  schoolInvoiceNumber?: string;
+  totalPaid?: number;
+  paymentMode?: string;
+  paymentDate?: string;
+};
+
+export type StudentFeesResponse = {
+  summary?: {
+    totalAssigned?: number;
+    totalDiscount?: number;
+    totalPaid?: number;
+    balance?: number;
+  };
+  recentPayments?: StudentFeePayment[];
+};
+
+export type ExamScheduleRow = {
+  scheduleId?: string;
+  examId?: string;
+  examName?: string;
+  date?: string;
+  startTime?: string;
+  endTime?: string;
+  subjectName?: string;
+  venue?: string;
+};
+
+export type TransportAllocation = {
+  routeName?: string;
+  stopName?: string;
+  dropStopName?: string;
+  pickupTime?: string;
+  dropTime?: string;
+  seatNumber?: string;
+  vehicleNumber?: string;
+  status?: string;
+};
+
+export type LibraryIssueRow = {
+  issueId: string;
+  bookTitle: string;
+  issueDate?: string;
+  dueDate?: string;
+  returnDate?: string;
+  status?: string;
+  fineAmount?: number;
+};
+
+export type StudentLeaveRow = {
+  requestId: string;
+  startDate: string;
+  endDate: string;
+  reason?: string;
+  status?: string;
 };
 
 export type StudentResultsResponse = {
@@ -275,4 +336,40 @@ export type StudentResultsResponse = {
 
 export async function fetchStudentResults(): Promise<StudentResultsResponse> {
   return apiGet<StudentResultsResponse>("/student/portal/results");
+}
+
+export async function fetchStudentFees(session?: string): Promise<StudentFeesResponse> {
+  return apiGet<StudentFeesResponse>("/student/portal/fees", { session });
+}
+
+export async function fetchExamSchedule(session?: string): Promise<ExamScheduleRow[]> {
+  const response = await apiGet<{ schedule?: ExamScheduleRow[] }>("/student/portal/exam-schedule", { session });
+  return response?.schedule || [];
+}
+
+export async function fetchStudentTransport(): Promise<TransportAllocation | null> {
+  const response = await apiGet<{ allocation?: TransportAllocation | null }>("/student/portal/transport");
+  return response?.allocation || null;
+}
+
+export async function fetchStudentLibrary(): Promise<LibraryIssueRow[]> {
+  const response = await apiGet<{ issues?: LibraryIssueRow[] }>("/student/portal/library");
+  return response?.issues || [];
+}
+
+export async function fetchStudentLeaves(): Promise<StudentLeaveRow[]> {
+  const response = await apiGet<{ leaves?: StudentLeaveRow[] }>("/student/portal/leaves");
+  return response?.leaves || [];
+}
+
+export async function applyStudentLeave(payload: { startDate: string; endDate: string; reason: string }) {
+  return apiPost<{ message?: string }>("/student/portal/leaves", payload);
+}
+
+export async function changeStudentPassword(payload: { oldPassword: string; newPassword: string }) {
+  return apiPost<{ message?: string }>("/student/portal/change-password", payload);
+}
+
+export async function saveStudentPushToken(payload: { token: string; platform?: string; enabled: boolean }) {
+  return apiPost<{ message?: string }>("/student/portal/push-token", payload);
 }

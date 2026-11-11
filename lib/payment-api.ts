@@ -149,6 +149,49 @@ export function refundMethodLabel(mode?: string) {
   return REFUND_METHOD[mode || ""] || mode || "";
 }
 
+export type RefundOption = {
+  feesTypeId: string;
+  feesTypeName: string;
+  ruleName?: string;
+  paidAmount: number;
+  refundPercent?: number;
+  eligibleAmount: number;
+  available: number;
+  adminFee?: number;
+  canRequest: boolean;
+  message?: string;
+};
+
+export async function fetchStudentRefundOptions(session?: string): Promise<RefundOption[]> {
+  const response = await apiGet<{ success?: boolean; data?: RefundOption[] }>(
+    "/student/portal/fees/refund-options",
+    { session }
+  );
+  return Array.isArray(response?.data) ? response.data : [];
+}
+
+export async function fetchChildRefundOptions(studentId: string, session?: string): Promise<RefundOption[]> {
+  const response = await apiGet<{ success?: boolean; data?: RefundOption[] }>(
+    `/parent/portal/children/${encodeURIComponent(studentId)}/fees/refund-options`,
+    { session }
+  );
+  return Array.isArray(response?.data) ? response.data : [];
+}
+
+export async function requestStudentRefund(body: { feesTypeId: string; reason: string; session?: string }) {
+  return apiPost<{ success?: boolean; message?: string }>("/student/portal/fees/refunds", body);
+}
+
+export async function requestChildRefund(
+  studentId: string,
+  body: { feesTypeId: string; reason: string; session?: string }
+) {
+  return apiPost<{ success?: boolean; message?: string }>(
+    `/parent/portal/children/${encodeURIComponent(studentId)}/fees/refunds`,
+    body
+  );
+}
+
 export async function fetchStudentRefunds(session?: string): Promise<StudentRefund[]> {
   const response = await apiGet<{ success?: boolean; data?: StudentRefund[] }>(
     "/student/portal/fees/refunds",

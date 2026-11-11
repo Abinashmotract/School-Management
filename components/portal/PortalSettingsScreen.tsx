@@ -18,9 +18,10 @@ import {
 type Props = {
   role: AppRole;
   extraSections?: React.ReactNode;
+  onPushChange?: (enabled: boolean) => void | Promise<void>;
 };
 
-export default function PortalSettingsScreen({ role, extraSections }: Props) {
+export default function PortalSettingsScreen({ role, extraSections, onPushChange }: Props) {
   const { colors, isDark, setColorScheme } = useAppTheme();
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<PortalSettings | null>(null);
@@ -63,7 +64,10 @@ export default function PortalSettingsScreen({ role, extraSections }: Props) {
         <Text style={[styles.label, { color: colors.text }]}>Push notifications</Text>
         <Switch
           value={settings.pushNotifications}
-          onValueChange={(value) => void update({ pushNotifications: value })}
+          onValueChange={(value) => {
+            void update({ pushNotifications: value });
+            void onPushChange?.(value);
+          }}
         />
       </View>
       <View style={[styles.row, { backgroundColor: colors.card }]}>

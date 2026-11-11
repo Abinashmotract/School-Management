@@ -1,8 +1,9 @@
 import { RoleColors } from '@/constants/school-theme';
 import { createThemedStyles } from '@/hooks/create-themed-styles';
 import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
-import { fetchStudentPaymentOptions, fetchStudentRefunds, refundMethodLabel, refundStatusLabel, type StudentRefund } from '@/lib/payment-api';
-import { fetchStudentProfile, type StudentProfile } from '@/lib/student-portal-api';
+import { fetchStudentPaymentOptions, fetchStudentRefundOptions, fetchStudentRefunds, refundMethodLabel, refundStatusLabel, requestStudentRefund, type RefundOption, type StudentRefund } from '@/lib/payment-api';
+import { RefundRequestForm } from '@/components/fees/RefundRequestForm';
+import { fetchStudentFees, fetchStudentProfile, type StudentFeePayment, type StudentFeesResponse, type StudentProfile } from '@/lib/student-portal-api';
 import { useFeePayment } from '@/lib/use-fee-payment';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -71,8 +72,10 @@ export default function StudentTasksScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [feeLedger, setFeeLedger] = useState<StudentFeesResponse | null>(null);
   const [paymentOptions, setPaymentOptions] = useState<Awaited<ReturnType<typeof fetchStudentPaymentOptions>> | null>(null);
   const [refunds, setRefunds] = useState<StudentRefund[]>([]);
+  const [refundOptions, setRefundOptions] = useState<RefundOption[]>([]);
   const { paying, runPayment } = useFeePayment(paymentOptions);
 
   const load = useCallback(async () => {
@@ -80,10 +83,17 @@ export default function StudentTasksScreen() {
     try {
       const data = await fetchStudentProfile();
       setProfile(data);
+      setFeeLedger(await fetchStudentFees(data.academicInformation?.session).catch(() => null));
       setPaymentOptions(
         await fetchStudentPaymentOptions(data.academicInformation?.session).catch(() => null)
       );
-      setRefunds(await fetchStudentRefunds(data.academicInformation?.session).catch(() => []));
+      const session = data.academicInformation?.session;
+      const [refundRows, refundChoices] = await Promise.all([
+        fetchStudentRefunds(session).catch(() => []),
+        fetchStudentRefundOptions(session).catch(() => []),
+      ]);
+      setRefunds(refundRows);
+      setRefundOptions(refundChoices);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load fees.');
     } finally {
@@ -106,7 +116,9 @@ export default function StudentTasksScreen() {
 
   const fees = profile?.feesInformation;
   const selectedFees = Array.isArray(fees?.selectedFees) ? fees.selectedFees : [];
-  const pending = Number(paymentOptions?.feesDetails?.totalPendingAmount || 0);
+  const pending = Number(paymentOptions?.feesDetails?.totalPendingAmount ?? feeLedger?.summary?.balance ?? 0);
+  const installments = paymentOptions?.feesDetails?.installments || [];
+  const payments: StudentFeePayment[] = feeLedger?.recentPayments || [];
 
   return (
     <ScrollView
@@ -130,8 +142,8 @@ export default function StudentTasksScreen() {
           <View style={styles.summary}>
             <Ionicons name="cash-outline" size={26} color={primary} />
             <View>
-              <Text style={styles.summaryValue}>{money(fees.totalAmount)}</Text>
-              <Text style={styles.summaryLabel}>Total fee amount</Text>
+              <Text style={styles.summaryValue}>{money(pending || fees.totalAmount)}</Text>
+              <Text style={styles.summaryLabel}>{pending ? 'Amount due' : 'Total fee amount'}</Text>
             </View>
           </View>
 
@@ -161,24 +173,6 @@ export default function StudentTasksScreen() {
             </Pressable>
           ) : null}
 
-          <Text style={styles.cardSubject}>Refunds</Text>
-          {refunds.length === 0 ? (
-            <Text style={[styles.summaryLabel, { marginBottom: 12 }]}>No refund requests yet.</Text>
-          ) : (
-            refunds.map((refund) => (
-              <View key={refund.refundId} style={styles.card}>
-                <Text style={styles.cardSubject}>{refund.feesTypeName || 'Fee refund'}</Text>
-                <Text style={styles.cardTitle}>{money(refund.amount)}</Text>
-                <Text style={styles.summaryLabel}>
-                  {refundStatusLabel(refund.status)}
-                  {refund.payoutMode ? ` · ${refundMethodLabel(refund.payoutMode)}` : ''}
-                  {refund.voucherNo ? ` · ${refund.voucherNo}` : ''}
-                </Text>
-                {refund.message ? <Text style={styles.summaryLabel}>{refund.message}</Text> : null}
-              </View>
-            ))
-          )}
-
           {[
             ['Session', fees.session || profile?.academicInformation?.session || '—'],
             ['Fee Group', fees.feesGroupId || '—'],
@@ -186,6 +180,8 @@ export default function StudentTasksScreen() {
             ['Scholarship', fees.scholarshipApplied ? money(fees.scholarshipAmount) : 'Not applied'],
             ['Payment Mode', fees.paymentMode || '—'],
             ['Fee Heads', String(selectedFees.length)],
+            ['Paid', money(feeLedger?.summary?.totalPaid)],
+            ['Balance', money(feeLedger?.summary?.balance)],
           ].map(([label, value]) => (
             <View key={label} style={styles.card}>
               <Text style={styles.cardSubject}>{label}</Text>
@@ -194,6 +190,60 @@ export default function StudentTasksScreen() {
           ))}
         </>
       ) : null}
+
+      {installments.length ? <Text style={styles.cardSubject}>Installments</Text> : null}
+      {installments.map((row) => (
+        <View key={row.installmentId} style={styles.card}>
+          <Text style={styles.cardSubject}>{row.installmentTitle || `Installment ${row.installmentNo || ''}`}</Text>
+          <Text style={styles.cardTitle}>{row.isPaid ? 'Paid' : money(row.totalDue || row.totalPending)}</Text>
+          {row.dueDate ? <Text style={styles.summaryLabel}>Due {String(row.dueDate).slice(0, 10)}</Text> : null}
+          {(row.feesItems || []).map((item) => (
+            <Text key={item.feesTypeId} style={styles.summaryLabel}>
+              {item.feesTypeName || item.feesTypeId}: due {money(item.pendingAmount)} · paid {money(item.paidAmount)}
+            </Text>
+          ))}
+        </View>
+      ))}
+
+      {payments.length ? <Text style={styles.cardSubject}>Payment history</Text> : null}
+      {payments.map((row) => (
+        <View key={row.paymentId || row.invoiceId} style={styles.card}>
+          <Text style={styles.cardSubject}>{row.schoolInvoiceNumber || row.invoiceId || 'Receipt'}</Text>
+          <Text style={styles.cardTitle}>{money(row.totalPaid)}</Text>
+          <Text style={styles.summaryLabel}>
+            {row.paymentMode || 'payment'}
+            {row.paymentDate ? ` · ${String(row.paymentDate).slice(0, 10)}` : ''}
+          </Text>
+        </View>
+      ))}
+
+      <RefundRequestForm
+        options={refundOptions}
+        accent={primary}
+        onSubmit={async (body) => {
+          await requestStudentRefund({ ...body, session: profile?.academicInformation?.session });
+          await load();
+          return 'Request sent. The school will review it.';
+        }}
+      />
+
+      <Text style={styles.cardSubject}>Refunds</Text>
+      {refunds.length === 0 ? (
+        <Text style={[styles.summaryLabel, { marginBottom: 12 }]}>No refund requests yet.</Text>
+      ) : (
+        refunds.map((refund) => (
+          <View key={refund.refundId} style={styles.card}>
+            <Text style={styles.cardSubject}>{refund.feesTypeName || 'Fee refund'}</Text>
+            <Text style={styles.cardTitle}>{money(refund.amount)}</Text>
+            <Text style={styles.summaryLabel}>
+              {refundStatusLabel(refund.status)}
+              {refund.payoutMode ? ` · ${refundMethodLabel(refund.payoutMode)}` : ''}
+              {refund.voucherNo ? ` · ${refund.voucherNo}` : ''}
+            </Text>
+            {refund.message ? <Text style={styles.summaryLabel}>{refund.message}</Text> : null}
+          </View>
+        ))
+      )}
     </ScrollView>
   );
 }

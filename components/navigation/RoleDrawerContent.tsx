@@ -37,8 +37,13 @@ const studentSections: DrawerSection[] = [
       { label: "Attendance", href: "/(student)/(tabs)/attendance", icon: "calendar-outline" },
       { label: "Timetable", href: "/(student)/(tabs)/activities", icon: "time-outline" },
       { label: "Teachers", href: "/(student)/(tabs)/teachers", icon: "people-outline" },
+      { label: "Exam dates", href: "/(student)/exams", icon: "calendar-outline" },
       { label: "Results", href: "/(student)/results", icon: "ribbon-outline" },
       { label: "Fees", href: "/(student)/(tabs)/tasks", icon: "cash-outline" },
+      { label: "Transport", href: "/(student)/transport", icon: "bus-outline" },
+      { label: "Library", href: "/(student)/library", icon: "library-outline" },
+      { label: "Leave", href: "/(student)/leave", icon: "medkit-outline" },
+      { label: "ID card", href: "/(student)/id-card", icon: "card-outline" },
     ],
   },
   {

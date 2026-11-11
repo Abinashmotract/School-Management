@@ -3,6 +3,7 @@ import { useDashboardStyles } from '@/hooks/use-dashboard-styles';
 import {
   fetchStudentAttendance,
   fetchLessonPlans,
+  fetchStudentFees,
   fetchStudentProfile,
   fetchTimetable,
   toPortalOverview,
@@ -24,6 +25,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -90,17 +92,20 @@ export function StudentDashboard() {
   const [plans, setPlans] = useState<LessonPlanRow[]>([]);
   const [slots, setSlots] = useState<TimetableSlot[]>([]);
   const [attendance, setAttendance] = useState<StudentAttendanceResponse | null>(null);
+  const [feeBalance, setFeeBalance] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
     try {
       const student = await fetchStudentProfile();
-      const [p, s, a] = await Promise.all([
+      const [p, s, a, fees] = await Promise.all([
         fetchLessonPlans(student),
         fetchTimetable(student),
         fetchStudentAttendance(student.academicInformation?.session, 90).catch(() => null),
+        fetchStudentFees(student.academicInformation?.session).catch(() => null),
       ]);
       setProfile(student);
+      setFeeBalance(fees?.summary?.balance ?? null);
       setOverview(toPortalOverview(student));
       setPlans(p);
       setSlots(s);
@@ -132,7 +137,7 @@ export function StudentDashboard() {
   }
 
   const name = overview?.studentName || 'Student';
-  const feesTotal = profile?.feesInformation?.totalAmount;
+  const feesTotal = feeBalance ?? profile?.feesInformation?.totalAmount;
   const today = todayKey();
   const todayAttendance = attendance?.records.find((r) => r.date === today);
   const rate = attendanceRate(attendance);
@@ -154,7 +159,7 @@ export function StudentDashboard() {
     { icon: 'analytics-outline', value: `${rate}%`, label: 'Attendance', tint: '#16A34A' },
     { icon: 'time-outline', value: String(todaySlots.length || slots.length), label: 'Classes', tint: primary },
     { icon: 'reader-outline', value: String(plans.length), label: 'Lessons', tint: '#7C3AED' },
-    { icon: 'cash-outline', value: money(feesTotal), label: 'Fees', tint: '#EA580C' },
+    { icon: 'cash-outline', value: money(feesTotal), label: feeBalance != null ? 'Due' : 'Fees', tint: '#EA580C' },
   ];
 
   return (
@@ -178,9 +183,13 @@ export function StudentDashboard() {
               <Text style={styles.greeting}>Good day</Text>
               <Text style={styles.bannerTitle}>Welcome, {name}</Text>
             </View>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
-            </View>
+            {profile?.basicInformation?.photo ? (
+              <Image source={{ uri: profile.basicInformation.photo }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
+              </View>
+            )}
           </View>
           <Text style={styles.bannerSub}>
             {overview

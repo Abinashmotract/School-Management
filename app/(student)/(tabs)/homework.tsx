@@ -4,14 +4,17 @@ import { usePortalScreenStyles } from '@/hooks/use-portal-screen-styles';
 import {
   fetchStudentHomework,
   submitHomework,
+  uploadHomeworkFile,
   type HomeworkAssignment,
 } from '@/lib/homework-api';
+import * as DocumentPicker from 'expo-document-picker';
 import { fetchStudentProfile } from '@/lib/student-portal-api';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -78,6 +81,7 @@ export default function StudentHomeworkScreen() {
   const [session, setSession] = useState<string>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [files, setFiles] = useState<Record<string, { uri: string; name: string; mimeType?: string }>>({});
   const [submittingId, setSubmittingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -99,15 +103,27 @@ export default function StudentHomeworkScreen() {
     load();
   }, [load]);
 
+  const pickFile = async (homeworkId: string) => {
+    const result = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true });
+    if (result.canceled || !result.assets?.[0]) return;
+    const asset = result.assets[0];
+    setFiles((prev) => ({
+      ...prev,
+      [homeworkId]: { uri: asset.uri, name: asset.name, mimeType: asset.mimeType },
+    }));
+  };
+
   const onSubmit = async (homeworkId: string) => {
     const content = drafts[homeworkId]?.trim();
-    if (!content) {
-      Alert.alert('Homework', 'Write your answer before submitting.');
+    const file = files[homeworkId];
+    if (!content && !file) {
+      Alert.alert('Homework', 'Write an answer or attach a file before submitting.');
       return;
     }
     setSubmittingId(homeworkId);
     try {
-      await submitHomework(homeworkId, { content });
+      const attachmentUrl = file ? await uploadHomeworkFile(file) : undefined;
+      await submitHomework(homeworkId, { content, attachmentUrl });
       Alert.alert('Submitted', 'Your homework was submitted successfully.');
       setExpandedId(null);
       await load();
@@ -164,6 +180,17 @@ export default function StudentHomeworkScreen() {
             </Pressable>
 
             {item.description ? <Text style={styles.desc}>{item.description}</Text> : null}
+            {item.attachmentUrl ? (
+              <Pressable onPress={() => void Linking.openURL(item.attachmentUrl!)}>
+                <Text style={[styles.cardMeta, { color: primary, marginTop: 8 }]}>Open teacher attachment</Text>
+              </Pressable>
+            ) : null}
+            {submitted && (item.mySubmission?.marks != null || item.mySubmission?.feedback) ? (
+              <Text style={styles.submittedText}>
+                {item.mySubmission?.marks != null ? `Marks: ${item.mySubmission.marks}` : ''}
+                {item.mySubmission?.feedback ? `\nFeedback: ${item.mySubmission.feedback}` : ''}
+              </Text>
+            ) : null}
 
             {open && !submitted ? (
               <View style={styles.form}>
@@ -176,6 +203,11 @@ export default function StudentHomeworkScreen() {
                     setDrafts((prev) => ({ ...prev, [item.homeworkId]: text }))
                   }
                 />
+                <Pressable onPress={() => void pickFile(item.homeworkId)}>
+                  <Text style={[styles.cardMeta, { color: primary, marginTop: 8 }]}>
+                    {files[item.homeworkId]?.name || 'Attach a file'}
+                  </Text>
+                </Pressable>
                 <Pressable
                   style={[styles.submitBtn, submittingId === item.homeworkId && { opacity: 0.6 }]}
                   disabled={submittingId === item.homeworkId}

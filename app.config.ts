@@ -28,6 +28,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     process.env.SCHOOL_API_URL || process.env.EXPO_PUBLIC_API_URL || "https://api.edvanceos.com/api";
   const projectId = process.env.EAS_PROJECT_ID || "d3c1f79d-9091-468c-8a8c-15c5eb8da623";
   const institutionId = process.env.SCHOOL_INSTITUTION_ID || "";
+  const version = process.env.SCHOOL_APP_VERSION || "1.0.0";
+  const versionCode = Number(process.env.SCHOOL_VERSION_CODE) || 1;
 
   const icon = brandingOrFallback("icon.png", "./assets/images/icon.png");
   const splash = brandingOrFallback("splash.png", "./assets/images/splash-icon.png");
@@ -36,7 +38,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: appName,
     slug,
-    version: "1.0.0",
+    version,
     orientation: "portrait",
     icon,
     scheme,
@@ -45,6 +47,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: iosBundleId,
+      buildNumber: String(versionCode),
     },
     android: {
       adaptiveIcon: {
@@ -56,6 +59,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       package: androidPackage,
+      versionCode,
       usesCleartextTraffic: true,
     },
     web: {
